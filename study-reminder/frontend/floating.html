@@ -140,30 +140,42 @@
       <button class="open-btn" id="openMainBtn">打开主窗口</button>
     </div>
 
-    <script type="module">
-      import { invoke } from "@tauri-apps/api/core";
-      import { getCurrentWindow } from "@tauri-apps/api/window";
-
+    <script>
+      // 使用 Tauri 2.x IPC 调用后端命令
       const floatIcon = document.getElementById("floatIcon");
       const floatPanel = document.getElementById("floatPanel");
       const taskList = document.getElementById("taskList");
       const openMainBtn = document.getElementById("openMainBtn");
 
-      // 点击图标打开主窗口
+      // 封装 IPC 调用
+      async function tauriInvoke(cmd, args) {
+        // Tauri 2.x 使用 window.__TAURI_INTERNALS__.invoke
+        if (window.__TAURI_INTERNALS__ && window.__TAURI_INTERNALS__.invoke) {
+          return window.__TAURI_INTERNALS__.invoke(cmd, args);
+        }
+        // 备用方式
+        if (window.__TAURI__ && window.__TAURI__.core) {
+          return window.__TAURI__.core.invoke(cmd, args);
+        }
+        console.error('Tauri IPC 不可用');
+        throw new Error('Tauri IPC 不可用');
+      }
+
+      // 点击图标 - 打开主窗口
       floatIcon.addEventListener("click", () => {
-        invoke("toggle_main_window");
+        tauriInvoke("toggle_main_window").catch(e => console.error("点击事件失败:", e));
       });
 
       // 点击"打开主窗口"按钮
       openMainBtn.addEventListener("click", () => {
-        invoke("toggle_main_window");
+        tauriInvoke("toggle_main_window").catch(e => console.error("点击事件失败:", e));
       });
 
       // 加载今日任务
       async function loadTodayTasks() {
         try {
           const today = new Date().toISOString().slice(0, 10);
-          const tasks = await invoke("get_tasks_for_date", { date: today });
+          const tasks = await tauriInvoke("get_tasks_for_date", { date: today });
 
           if (tasks.length === 0) {
             taskList.innerHTML = '<div class="empty-state">🎉 今天没有任务</div>';

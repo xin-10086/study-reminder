@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { editingTask } from "../lib/store";
-  import { createTask, updateTask } from "../lib/api";
+  import { editingTask, selectedDate } from "../lib/store";
+  import { createTask, updateTask, deleteTask } from "../lib/api";
   import type { CreateTaskDto, UpdateTaskDto } from "../lib/types";
 
   let { onclose }: { onclose: () => void } = $props();
@@ -73,12 +73,18 @@
 
     saving = true;
 
+    // 如果没有设置任何日期，默认使用当前选中的日期（日视图中的日期）
+    const defaultDate = $selectedDate || new Date().toISOString().slice(0, 10);
+    console.log("TaskEditor: selectedDate =", $selectedDate, "defaultDate =", defaultDate);
+    const finalRemindDate = remindDate || (hasDueDate && dueDate ? dueDate : defaultDate);
+    const finalDueDate = hasDueDate && dueDate ? dueDate : null;
+
     const baseDto: CreateTaskDto = {
       title: title.trim(),
       priority,
       category: category || null,
-      due_date: hasDueDate && dueDate ? dueDate : null,
-      remind_date: remindDate || (hasDueDate && dueDate ? dueDate : null),
+      due_date: finalDueDate,
+      remind_date: finalRemindDate,
       has_time_slot: hasTimeSlot,
       time_start: hasTimeSlot && timeStart ? timeStart : null,
       time_end: hasTimeSlot && timeEnd ? timeEnd : null,
@@ -241,17 +247,29 @@
     </div>
 
     <!-- 按钮 -->
-    <div class="flex justify-end gap-2 px-5 py-3 border-t border-stone-200 bg-stone-50 rounded-b-xl">
-      <button onclick={onclose} class="px-4 py-2 text-sm text-stone-600 hover:bg-stone-100 rounded">
-        取消
-      </button>
-      <button
-        onclick={handleSave}
-        disabled={saving}
-        class="px-4 py-2 text-sm bg-orange-500 text-white rounded hover:bg-orange-600 disabled:opacity-50"
-      >
-        {saving ? "保存中..." : "保存"}
-      </button>
+    <div class="flex justify-between gap-2 px-5 py-3 border-t border-stone-200 bg-stone-50 rounded-b-xl">
+      <div>
+        {#if isEdit}
+          <button
+            onclick={async () => { if (confirm("确定删除此任务？")) { await deleteTask($editingTask!.id); onclose(); } }}
+            class="px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded border border-red-200"
+          >
+            🗑 删除
+          </button>
+        {/if}
+      </div>
+      <div class="flex gap-2">
+        <button onclick={onclose} class="px-4 py-2 text-sm text-stone-600 hover:bg-stone-100 rounded">
+          取消
+        </button>
+        <button
+          onclick={handleSave}
+          disabled={saving}
+          class="px-4 py-2 text-sm bg-orange-500 text-white rounded hover:bg-orange-600 disabled:opacity-50"
+        >
+          {saving ? "保存中..." : "保存"}
+        </button>
+      </div>
     </div>
   </div>
 </div>

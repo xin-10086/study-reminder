@@ -71,17 +71,21 @@
     }
   }
 
+  function getStoreValue<T>(store: { subscribe: (run: (value: T) => void) => () => void }): T {
+    let value: T;
+    store.subscribe((v: T) => { value = v; })();
+    return value!;
+  }
+
   async function loadMonthData() {
-    let year: number, month: number;
-    currentYear.subscribe((v) => (year = v))();
-    currentMonth.subscribe((v) => (month = v))();
+    const year = getStoreValue(currentYear);
+    const month = getStoreValue(currentMonth);
 
     try {
       const [monthTasks, crossTasks] = await Promise.all([
         getTasksForMonth(year, month),
         getCrossMonthTasks(year, month),
       ]);
-      const { tasks, crossMonthTasks } = await import("./lib/store");
       tasks.set(monthTasks);
       crossMonthTasks.set(crossTasks);
     } catch (e) {
@@ -94,38 +98,26 @@
   }
 
   function goToPrevMonth() {
-    currentYear.update((y) => {
-      let m: number;
-      currentMonth.update((v) => {
-        m = v;
-        return v;
-      })();
-      if (m === 1) {
-        currentMonth.set(12);
-        return y - 1;
-      } else {
-        currentMonth.set(m - 1);
-        return y;
-      }
-    });
+    const curYear = getStoreValue(currentYear);
+    const curMonth = getStoreValue(currentMonth);
+    if (curMonth === 1) {
+      currentYear.set(curYear - 1);
+      currentMonth.set(12);
+    } else {
+      currentMonth.set(curMonth - 1);
+    }
     loadMonthData();
   }
 
   function goToNextMonth() {
-    currentYear.update((y) => {
-      let m: number;
-      currentMonth.update((v) => {
-        m = v;
-        return v;
-      })();
-      if (m === 12) {
-        currentMonth.set(1);
-        return y + 1;
-      } else {
-        currentMonth.set(m + 1);
-        return y;
-      }
-    });
+    const curYear = getStoreValue(currentYear);
+    const curMonth = getStoreValue(currentMonth);
+    if (curMonth === 12) {
+      currentYear.set(curYear + 1);
+      currentMonth.set(1);
+    } else {
+      currentMonth.set(curMonth + 1);
+    }
     loadMonthData();
   }
 
@@ -137,7 +129,12 @@
   function onEditorClose() {
     showEditor.set(false);
     editingTask.set(null);
-    loadMonthData();
+    // 根据当前视图重新加载数据
+    const view = getStoreValue(currentView);
+    if (view === "month") {
+      loadMonthData();
+    }
+    // 日视图和全部任务视图通过 $effect 自动重新加载
   }
 </script>
 

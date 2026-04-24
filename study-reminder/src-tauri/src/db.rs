@@ -283,41 +283,42 @@ impl Database {
 
     /// 创建新任务
     pub fn create_task(&self, dto: CreateTaskDto) -> Result<Task, String> {
-        let conn = self.conn.lock().map_err(|e| format!("锁失败: {}", e))?;
-
         let priority = dto.priority.unwrap_or(2);
         let has_time_slot = dto.has_time_slot.unwrap_or(false);
         let repeat_type = dto.repeat_type.unwrap_or_else(|| "none".to_string());
 
-        conn.execute(
-            "INSERT INTO tasks (title, priority, category, due_date, remind_date, has_time_slot, time_start, time_end, repeat_type, repeat_days, repeat_end, note)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
-            params![
-                dto.title,
-                priority,
-                dto.category,
-                dto.due_date,
-                dto.remind_date,
-                has_time_slot as i32,
-                dto.time_start,
-                dto.time_end,
-                repeat_type,
-                dto.repeat_days,
-                dto.repeat_end,
-                dto.note,
-            ],
-        ).map_err(|e| format!("创建任务失败: {}", e))?;
+        let id = {
+            let conn = self.conn.lock().map_err(|e| format!("锁失败: {}", e))?;
+            conn.execute(
+                "INSERT INTO tasks (title, priority, category, due_date, remind_date, has_time_slot, time_start, time_end, repeat_type, repeat_days, repeat_end, note)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+                params![
+                    dto.title,
+                    priority,
+                    dto.category,
+                    dto.due_date,
+                    dto.remind_date,
+                    has_time_slot as i32,
+                    dto.time_start,
+                    dto.time_end,
+                    repeat_type,
+                    dto.repeat_days,
+                    dto.repeat_end,
+                    dto.note,
+                ],
+            ).map_err(|e| format!("创建任务失败: {}", e))?;
+            conn.last_insert_rowid()
+        }; // 锁在这里释放
 
-        let id = conn.last_insert_rowid();
         self.get_task_by_id(id)
     }
 
     /// 更新任务
     pub fn update_task(&self, id: i64, dto: UpdateTaskDto) -> Result<Task, String> {
-        let conn = self.conn.lock().map_err(|e| format!("锁失败: {}", e))?;
-
-        // 先获取现有任务
-        let existing = self.get_task_by_id_internal(&conn, id)?;
+        let existing = {
+            let conn = self.conn.lock().map_err(|e| format!("锁失败: {}", e))?;
+            self.get_task_by_id_internal(&conn, id)?
+        }; // 锁释放
 
         let title = dto.title.unwrap_or(existing.title);
         let priority = dto.priority.unwrap_or(existing.priority);
@@ -333,17 +334,20 @@ impl Database {
         let completed = dto.completed.unwrap_or(existing.completed);
         let note = dto.note.or(existing.note);
 
-        conn.execute(
-            "UPDATE tasks SET title=?1, priority=?2, category=?3, due_date=?4, remind_date=?5,
-             has_time_slot=?6, time_start=?7, time_end=?8, repeat_type=?9, repeat_days=?10,
-             repeat_end=?11, completed=?12, note=?13, updated_at=datetime('now','localtime')
-             WHERE id=?14",
-            params![
-                title, priority, category, due_date, remind_date,
-                has_time_slot as i32, time_start, time_end, repeat_type, repeat_days,
-                repeat_end, completed as i32, note, id,
-            ],
-        ).map_err(|e| format!("更新任务失败: {}", e))?;
+        {
+            let conn = self.conn.lock().map_err(|e| format!("锁失败: {}", e))?;
+            conn.execute(
+                "UPDATE tasks SET title=?1, priority=?2, category=?3, due_date=?4, remind_date=?5,
+                 has_time_slot=?6, time_start=?7, time_end=?8, repeat_type=?9, repeat_days=?10,
+                 repeat_end=?11, completed=?12, note=?13, updated_at=datetime('now','localtime')
+                 WHERE id=?14",
+                params![
+                    title, priority, category, due_date, remind_date,
+                    has_time_slot as i32, time_start, time_end, repeat_type, repeat_days,
+                    repeat_end, completed as i32, note, id,
+                ],
+            ).map_err(|e| format!("更新任务失败: {}", e))?;
+        } // 锁释放
 
         self.get_task_by_id(id)
     }
@@ -358,11 +362,13 @@ impl Database {
 
     /// 切换完成状态
     pub fn toggle_complete(&self, id: i64) -> Result<Task, String> {
-        let conn = self.conn.lock().map_err(|e| format!("锁失败: {}", e))?;
-        conn.execute(
-            "UPDATE tasks SET completed = CASE WHEN completed=0 THEN 1 ELSE 0 END, updated_at=datetime('now','localtime') WHERE id=?1",
-            params![id],
-        ).map_err(|e| format!("切换状态失败: {}", e))?;
+        {
+            let conn = self.conn.lock().map_err(|e| format!("锁失败: {}", e))?;
+            conn.execute(
+                "UPDATE tasks SET completed = CASE WHEN completed=0 THEN 1 ELSE 0 END, updated_at=datetime('now','localtime') WHERE id=?1",
+                params![id],
+            ).map_err(|e| format!("切换状态失败: {}", e))?;
+        } // 锁释放
         self.get_task_by_id(id)
     }
 

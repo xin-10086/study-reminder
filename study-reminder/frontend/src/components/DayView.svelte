@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { selectedDate, showEditor, editingTask } from "../lib/store";
+  import { selectedDate, showEditor, editingTask, currentView } from "../lib/store";
   import { getTasksForDate, toggleComplete, deleteTask } from "../lib/api";
   import { PRIORITY_COLORS, PRIORITY_LABELS } from "../lib/types";
   import type { Task } from "../lib/types";
@@ -20,8 +20,19 @@
     if (date) loadDayData();
   });
 
+  // 监听编辑弹窗关闭后重新加载
+  $effect(() => {
+    const editorOpen = $showEditor;
+    // 当编辑器关闭时（从 true 变为 false），重新加载数据
+    if (!editorOpen && $selectedDate) {
+      // 使用 setTimeout 确保编辑器状态已完全更新
+      setTimeout(() => loadDayData(), 100);
+    }
+  });
+
   async function loadDayData() {
     const date = $selectedDate;
+    console.log("DayView.loadDayData: date =", date);
     if (!date) return;
     try {
       const tasks = await getTasksForDate(date);

@@ -79,7 +79,7 @@ m<script lang="ts">
         class="flex items-center gap-2 px-3 py-2.5 rounded border {PRIORITY_COLORS[task.priority]} cursor-pointer hover:shadow-sm transition-shadow"
         onclick={() => handleEdit(task)}
       >
-        <button onclick|stopPropagation={() => handleToggle(task.id)} class="flex-shrink-0">
+        <button onclick={(e) => { e.stopPropagation(); handleToggle(task.id); }} class="flex-shrink-0">
           <span class="w-5 h-5 rounded border-2 border-stone-300 flex items-center justify-center text-xs">
             {task.completed ? "✓" : ""}
           </span>
@@ -112,7 +112,7 @@ m<script lang="ts">
             </span>
           {/if}
           <span class="text-xs px-1.5 py-0.5 rounded bg-white/50">{PRIORITY_LABELS[task.priority]}</span>
-          <button onclick|stopPropagation={() => handleDelete(task.id)} class="text-stone-400 hover:text-red-500 text-xs">
+          <button onclick={(e) => { e.stopPropagation(); handleDelete(task.id); }} class="text-stone-400 hover:text-red-500 text-xs">
             ✕
           </button>
         </div>

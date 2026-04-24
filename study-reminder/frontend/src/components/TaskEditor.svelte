@@ -112,7 +112,7 @@
   <!-- 弹窗 -->
   <div
     class="bg-white rounded-xl shadow-xl w-[480px] max-h-[90vh] overflow-y-auto animate-fade-in"
-    onclick|stopPropagation
+    onclick={(e) => e.stopPropagation()}
   >
     <!-- 标题 -->
     <div class="flex items-center justify-between px-5 py-3 border-b border-stone-200">

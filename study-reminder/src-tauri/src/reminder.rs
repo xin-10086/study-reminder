@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
-use chrono::{Local, NaiveDate};
+use chrono::Local;
 use tauri::AppHandle;
 use tauri_plugin_notification::NotificationExt;
 use crate::db::Database;

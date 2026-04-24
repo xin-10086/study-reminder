@@ -65,8 +65,8 @@ pub fn toggle_main_window(app: AppHandle) -> Result<(), String> {
 /// 切换开机自启状态
 #[tauri::command]
 pub fn toggle_autostart(app: AppHandle) -> Result<bool, String> {
-    let autostart = app.autostart();
-    let is_enabled = autostart.is_enabled().unwrap_or(false);
+    let autostart = app.autolaunch();
+    let is_enabled = autostart.is_enabled().map_err(|e| format!("获取状态失败: {}", e))?;
     if is_enabled {
         autostart.disable().map_err(|e| format!("禁用开机自启失败: {}", e))?;
         Ok(false)
@@ -79,6 +79,6 @@ pub fn toggle_autostart(app: AppHandle) -> Result<bool, String> {
 /// 获取开机自启状态
 #[tauri::command]
 pub fn get_autostart_status(app: AppHandle) -> Result<bool, String> {
-    let autostart = app.autostart();
-    Ok(autostart.is_enabled().unwrap_or(false))
+    let autostart = app.autolaunch();
+    Ok(autostart.is_enabled().map_err(|e| format!("获取状态失败: {}", e))?)
 }

@@ -103,8 +103,6 @@ fn setup_tray<R: Runtime>(app: &AppHandle<R>) -> Result<(), Box<dyn std::error::
 /// 设置悬浮窗（吸附在屏幕右侧的小窗口）
 fn setup_floating_window<R: Runtime>(app: &AppHandle<R>) -> Result<(), Box<dyn std::error::Error>> {
     use tauri::WebviewWindowBuilder;
-    use tauri::LogicalPosition;
-    use tauri::LogicalSize;
 
     // 获取主窗口
     let main_window = app.get_webview_window("main").unwrap();

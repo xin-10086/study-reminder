@@ -1,9 +1,10 @@
 use rusqlite::{Connection, params};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use crate::models::{Task, CreateTaskDto, UpdateTaskDto};
 
+#[derive(Clone)]
 pub struct Database {
-    conn: Mutex<Connection>,
+    conn: Arc<Mutex<Connection>>,
 }
 
 impl Database {
@@ -41,7 +42,7 @@ impl Database {
         ).map_err(|e| format!("创建表失败: {}", e))?;
 
         Ok(Database {
-            conn: Mutex::new(conn),
+            conn: Arc::new(Mutex::new(conn)),
         })
     }
 

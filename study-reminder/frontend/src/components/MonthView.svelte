@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { tasks, crossMonthTasks, currentYear, currentMonth } from "../lib/store";
+  import { tasks, crossMonthTasks, currentYear, currentMonth, currentView, selectedDate } from "../lib/store";
   import { PRIORITY_COLORS } from "../lib/types";
 
   let { onselect }: { onselect: (date: string) => void } = $props();

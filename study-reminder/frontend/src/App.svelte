@@ -9,19 +9,51 @@
     editingTask,
   } from "./lib/store";
   import type { ViewType, Task } from "./lib/types";
-  import { getTasksForMonth, getCrossMonthTasks } from "./lib/api";
+  import { getTasksForMonth, getCrossMonthTasks, exportTasks } from "./lib/api";
   import MonthView from "./components/MonthView.svelte";
   import DayView from "./components/DayView.svelte";
   import AllTasksView from "./components/AllTasksView.svelte";
   import TaskEditor from "./components/TaskEditor.svelte";
 
   let today = $state(new Date().toISOString().slice(0, 10));
+  let notificationGranted = $state(false);
 
-  onMount(() => {
+  onMount(async () => {
     // 初始化选中日期为今天
     selectedDate.set(today);
     loadMonthData();
+
+    // 请求通知权限
+    try {
+      const { isPermissionGranted, requestPermission } = await import("@tauri-apps/plugin-notification");
+      let granted = await isPermissionGranted();
+      if (!granted) {
+        const permission = await requestPermission();
+        granted = permission === "granted";
+      }
+      notificationGranted = granted;
+      console.log(`通知权限: ${granted ? "已授权" : "未授权"}`);
+    } catch (e) {
+      console.warn("通知权限请求失败（开发环境正常）:", e);
+    }
   });
+
+  async function handleExport() {
+    try {
+      const tasks = await exportTasks();
+      const json = JSON.stringify(tasks, null, 2);
+      // 使用 Blob 下载
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `study-reminder-backup-${today}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("导出失败:", e);
+    }
+  }
 
   async function loadMonthData() {
     let year: number, month: number;
@@ -127,6 +159,13 @@
         class="px-3 py-1 text-sm rounded {$currentView === 'all' ? 'bg-orange-500 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}"
       >
         全部任务
+      </button>
+      <button
+        onclick={handleExport}
+        class="px-3 py-1 text-sm rounded bg-stone-100 text-stone-600 hover:bg-stone-200"
+        title="导出为 JSON"
+      >
+        📤 导出
       </button>
       <button
         onclick={openNewTask}

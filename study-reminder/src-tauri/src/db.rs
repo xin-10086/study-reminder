@@ -49,23 +49,15 @@ impl Database {
     pub fn get_tasks_for_date(&self, date: &str) -> Result<Vec<Task>, String> {
         let conn = self.conn.lock().map_err(|e| format!("锁失败: {}", e))?;
 
-        // 解析日期获取星期几
+        // 解析日期获取星期几 (1=周一, 7=周日)
         let weekday = self.parse_weekday(date)?;
 
-        // 查询：非周期任务匹配日期，或周期任务匹配规则
+        // 查询所有未完成的任务
         let mut stmt = conn.prepare(
-            "SELECT * FROM tasks WHERE
-                (completed = 0) AND (
-                    (repeat_type = 'none' AND due_date = ?1) OR
-                    (repeat_type = 'none' AND remind_date = ?1) OR
-                    (repeat_type = 'daily' AND (repeat_end IS NULL OR repeat_end >= ?1)) OR
-                    (repeat_type = 'weekdays' AND ?2 BETWEEN 1 AND 5 AND (repeat_end IS NULL OR repeat_end >= ?1)) OR
-                    (repeat_type = 'weekly' AND (repeat_end IS NULL OR repeat_end >= ?1))
-                )
-            ORDER BY priority ASC, due_date ASC"
+            "SELECT * FROM tasks WHERE completed = 0 ORDER BY priority ASC, due_date ASC"
         ).map_err(|e| format!("查询准备失败: {}", e))?;
 
-        let tasks = stmt.query_map(params![date, weekday], |row| {
+        let tasks = stmt.query_map([], |row| {
             Ok(Task {
                 id: row.get(0)?,
                 title: row.get(1)?,
@@ -90,33 +82,48 @@ impl Database {
 
         let mut result = Vec::new();
         for task in tasks {
-            let mut t = task.map_err(|e| format!("行读取失败: {}", e))?;
+            let t = task.map_err(|e| format!("行读取失败: {}", e))?;
 
-            // 如果是 weekly 类型，检查是否匹配星期几
-            if t.repeat_type == "weekly" {
-                if let Some(ref days_str) = t.repeat_days {
-                    let days: Vec<i32> = days_str.split(',')
-                        .filter_map(|s| s.trim().parse().ok())
-                        .collect();
-                    if !days.contains(&weekday) {
-                        continue;
-                    }
-                }
+            // 判断任务是否应该出现在这个日期
+            if self.task_matches_date(&t, date, weekday) {
+                result.push(t);
             }
-
-            // 如果是非周期任务且 remind_date 和 due_date 都不匹配，跳过
-            if t.repeat_type == "none" {
-                let matches_remind = t.remind_date.as_deref() == Some(date);
-                let matches_due = t.due_date.as_deref() == Some(date);
-                if !matches_remind && !matches_due {
-                    continue;
-                }
-            }
-
-            result.push(t);
         }
 
         Ok(result)
+    }
+
+    /// 判断任务是否匹配指定日期
+    fn task_matches_date(&self, task: &Task, date: &str, weekday: i32) -> bool {
+        match task.repeat_type.as_str() {
+            "none" => {
+                // 非周期任务：匹配 due_date 或 remind_date
+                task.due_date.as_deref() == Some(date) ||
+                task.remind_date.as_deref() == Some(date)
+            }
+            "daily" => {
+                // 每天重复：检查是否在重复结束日期之前
+                task.repeat_end.as_deref().map_or(true, |end| end >= date)
+            }
+            "weekdays" => {
+                // 工作日：周一至周五，且在结束日期之前
+                weekday >= 1 && weekday <= 5 &&
+                task.repeat_end.as_deref().map_or(true, |end| end >= date)
+            }
+            "weekly" => {
+                // 每周指定天：检查星期几匹配
+                if let Some(ref days_str) = task.repeat_days {
+                    let days: Vec<i32> = days_str.split(',')
+                        .filter_map(|s| s.trim().parse().ok())
+                        .collect();
+                    days.contains(&weekday) &&
+                    task.repeat_end.as_deref().map_or(true, |end| end >= date)
+                } else {
+                    false
+                }
+            }
+            _ => false,
+        }
     }
 
     /// 获取指定月份的所有任务（含周期任务）

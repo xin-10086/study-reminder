@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
-use chrono::Local;
+use chrono::{Local, NaiveDate};
 use tauri::AppHandle;
 use tauri_plugin_notification::NotificationExt;
 use crate::db::Database;
@@ -23,12 +23,14 @@ impl ReminderEngine {
         let notified = self.notified.clone();
         let app_clone = app.clone();
 
+        log::info!("⏰ 提醒引擎已启动，每30秒检查一次");
+
         std::thread::spawn(move || {
             loop {
                 if let Err(e) = Self::check_reminders(&app_clone, &db, &notified) {
                     log::error!("提醒检查失败: {}", e);
                 }
-                std::thread::sleep(std::time::Duration::from_secs(60));
+                std::thread::sleep(std::time::Duration::from_secs(30));
             }
         });
     }
@@ -42,6 +44,7 @@ impl ReminderEngine {
         let today = now.format("%Y-%m-%d").to_string();
         let current_time = now.format("%H:%M").to_string();
 
+        // 获取今天所有任务（含周期任务）
         let tasks = db.get_tasks_for_date(&today)?;
 
         for task in &tasks {
@@ -57,7 +60,12 @@ impl ReminderEngine {
                             let key = format!("time:{}:{}", task.id, today);
                             let mut set = notified.lock().map_err(|e| format!("锁失败: {}", e))?;
                             if !set.contains(&key) {
-                                Self::send_notification(app, &task.title, &format!("任务即将开始: {}", task.title));
+                                log::info!("🔔 发送时间提醒: {} ({} 开始)", task.title, start);
+                                Self::send_notification(
+                                    app,
+                                    "任务即将开始",
+                                    &format!("「{}」将在 {} 开始", task.title, start),
+                                );
                                 set.insert(key);
                             }
                         }
@@ -71,19 +79,29 @@ impl ReminderEngine {
                     let key = format!("due:{}:{}", task.id, today);
                     let mut set = notified.lock().map_err(|e| format!("锁失败: {}", e))?;
                     if !set.contains(&key) {
-                        Self::send_notification(app, "截止日提醒", &format!("任务「{}」今天截止！", task.title));
+                        log::info!("🔔 发送截止日提醒: {}", task.title);
+                        Self::send_notification(
+                            app,
+                            "📌 截止日提醒",
+                            &format!("任务「{}」今天截止！", task.title),
+                        );
                         set.insert(key);
                     }
                 }
             }
 
-            // 3. 提醒日期任务
+            // 3. 提醒日期任务（不与截止日同一天重复通知）
             if let Some(ref remind) = task.remind_date {
                 if remind == &today && task.due_date.as_deref() != Some(&today) {
                     let key = format!("remind:{}:{}", task.id, today);
                     let mut set = notified.lock().map_err(|e| format!("锁失败: {}", e))?;
                     if !set.contains(&key) {
-                        Self::send_notification(app, "任务提醒", &format!("任务「{}」需要关注", task.title));
+                        log::info!("🔔 发送提醒: {}", task.title);
+                        Self::send_notification(
+                            app,
+                            "📋 任务提醒",
+                            &format!("任务「{}」需要关注", task.title),
+                        );
                         set.insert(key);
                     }
                 }
@@ -95,7 +113,12 @@ impl ReminderEngine {
                     let key = format!("overdue:{}:{}", task.id, today);
                     let mut set = notified.lock().map_err(|e| format!("锁失败: {}", e))?;
                     if !set.contains(&key) {
-                        Self::send_notification(app, "逾期提醒", &format!("任务「{}」已逾期！请尽快处理", task.title));
+                        log::info!("🔔 发送逾期提醒: {}", task.title);
+                        Self::send_notification(
+                            app,
+                            "⚠️ 逾期提醒",
+                            &format!("任务「{}」已逾期！请尽快处理", task.title),
+                        );
                         set.insert(key);
                     }
                 }
@@ -106,13 +129,14 @@ impl ReminderEngine {
     }
 
     fn send_notification(app: &AppHandle, title: &str, body: &str) {
-        if let Err(e) = app.notification()
+        match app.notification()
             .builder()
             .title(title)
             .body(body)
             .show()
         {
-            log::error!("发送通知失败: {}", e);
+            Ok(_) => log::info!("通知发送成功: {} - {}", title, body),
+            Err(e) => log::error!("发送通知失败: {}", e),
         }
     }
 

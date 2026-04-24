@@ -45,3 +45,18 @@ export async function getCrossMonthTasks(year: number, month: number): Promise<T
 export async function exportTasks(): Promise<Task[]> {
   return invoke("export_tasks");
 }
+
+/** 切换主窗口显示/隐藏 */
+export async function toggleMainWindow(): Promise<void> {
+  return invoke("toggle_main_window");
+}
+
+/** 切换开机自启 */
+export async function toggleAutostart(): Promise<boolean> {
+  return invoke("toggle_autostart");
+}
+
+/** 获取开机自启状态 */
+export async function getAutostartStatus(): Promise<boolean> {
+  return invoke("get_autostart_status");
+}

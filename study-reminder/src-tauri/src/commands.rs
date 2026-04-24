@@ -1,4 +1,5 @@
-use tauri::State;
+use tauri::{AppHandle, Manager, State};
+use tauri_plugin_autostart::ManagerExt;
 use crate::db::Database;
 use crate::models::{Task, CreateTaskDto, UpdateTaskDto};
 
@@ -45,4 +46,39 @@ pub fn get_cross_month_tasks(db: State<Database>, year: i32, month: u32) -> Resu
 #[tauri::command]
 pub fn export_tasks(db: State<Database>) -> Result<Vec<Task>, String> {
     db.export_all_tasks()
+}
+
+/// 切换主窗口显示/隐藏
+#[tauri::command]
+pub fn toggle_main_window(app: AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("main") {
+        if window.is_visible().unwrap_or(false) {
+            let _ = window.hide();
+        } else {
+            let _ = window.show();
+            let _ = window.set_focus();
+        }
+    }
+    Ok(())
+}
+
+/// 切换开机自启状态
+#[tauri::command]
+pub fn toggle_autostart(app: AppHandle) -> Result<bool, String> {
+    let autostart = app.autostart();
+    let is_enabled = autostart.is_enabled().unwrap_or(false);
+    if is_enabled {
+        autostart.disable().map_err(|e| format!("禁用开机自启失败: {}", e))?;
+        Ok(false)
+    } else {
+        autostart.enable().map_err(|e| format!("启用开机自启失败: {}", e))?;
+        Ok(true)
+    }
+}
+
+/// 获取开机自启状态
+#[tauri::command]
+pub fn get_autostart_status(app: AppHandle) -> Result<bool, String> {
+    let autostart = app.autostart();
+    Ok(autostart.is_enabled().unwrap_or(false))
 }

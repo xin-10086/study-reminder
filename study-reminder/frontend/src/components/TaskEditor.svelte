@@ -139,7 +139,7 @@
           bind:value={title}
           type="text"
           placeholder="输入任务标题"
-          class="w-full px-4 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all"
+          class="w-full px-4 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all placeholder:text-stone-300"
         />
       </div>
 
@@ -147,19 +147,25 @@
       <div class="flex gap-4">
         <div class="flex-1">
           <label class="block text-xs font-medium text-stone-500 mb-1.5">优先级</label>
-          <select bind:value={priority} class="w-full px-4 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all appearance-none bg-white">
-            <option value={1}>🔴 高</option>
-            <option value={2}>🟡 中</option>
-            <option value={3}>⚪ 低</option>
-          </select>
+          <div class="relative">
+            <select bind:value={priority} class="w-full px-4 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all appearance-none bg-white">
+              <option value={1}>🔴 高</option>
+              <option value={2}>🟡 中</option>
+              <option value={3}>⚪ 低</option>
+            </select>
+            <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400 text-xs">▼</div>
+          </div>
         </div>
         <div class="flex-1">
           <label class="block text-xs font-medium text-stone-500 mb-1.5">类别</label>
-          <select bind:value={category} class="w-full px-4 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all appearance-none bg-white">
-            {#each CATEGORIES as cat}
-              <option value={cat}>{cat}</option>
-            {/each}
-          </select>
+          <div class="relative">
+            <select bind:value={category} class="w-full px-4 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all appearance-none bg-white">
+              {#each CATEGORIES as cat}
+                <option value={cat}>{cat}</option>
+              {/each}
+            </select>
+            <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400 text-xs">▼</div>
+          </div>
         </div>
       </div>
 

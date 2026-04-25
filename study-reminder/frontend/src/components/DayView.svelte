@@ -145,30 +145,36 @@
         <span class="text-sm font-semibold text-stone-500">⏰ 时间安排</span>
         <span class="text-xs text-stone-400 bg-stone-100 px-2 py-0.5 rounded-full">{timeSlots.length}项</span>
       </div>
-      <div class="space-y-1 relative">
-        <!-- 时间轴竖线 -->
-        <div class="absolute left-[60px] top-0 bottom-0 w-px bg-stone-200"></div>
+      <div class="space-y-2 relative">
         {#each timeSlots as task}
           <div
             class="flex items-stretch gap-3 cursor-pointer group"
             onclick={() => handleEdit(task)}
           >
-            <div class="w-14 flex-shrink-0 text-right text-xs text-stone-400 pt-3 font-mono">
-              {task.time_start || ""}
-            </div>
-            <div
-              class="flex-1 px-4 py-3 rounded-xl border-l-4 {getPriorityBorder(task.priority)} bg-white shadow-sm card-hover ml-3"
-            >
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <span class="w-2 h-2 rounded-full {getPriorityDot(task.priority)}"></span>
-                  <span class="text-sm font-medium">{task.title}</span>
-                </div>
-                <span class="text-xs text-stone-400 bg-stone-50 px-2 py-0.5 rounded-full">{formatTimeRange(task)}</span>
-              </div>
-              {#if task.note}
-                <div class="text-xs text-stone-400 mt-1 ml-4 truncate">{task.note}</div>
+            <div class="w-14 flex-shrink-0 flex flex-col items-end justify-center">
+              <span class="text-xs font-mono font-semibold text-stone-500">{task.time_start || ""}</span>
+              {#if task.time_end}
+                <span class="text-[10px] font-mono text-stone-400">{task.time_end}</span>
               {/if}
+            </div>
+            <div class="relative flex-1 pl-4">
+              <!-- 时间轴圆点 -->
+              <div class="absolute left-0 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full border-2 {getPriorityDot(task.priority).replace('bg-', 'border-')} bg-white shadow-sm"></div>
+              <!-- 时间轴竖线 -->
+              <div class="absolute left-[4px] top-0 bottom-0 w-0.5 bg-stone-100 -z-10"></div>
+              <div
+                class="px-4 py-3 rounded-xl border-l-4 {getPriorityBorder(task.priority)} bg-white shadow-sm card-hover"
+              >
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium">{task.title}</span>
+                  </div>
+                  <span class="text-xs text-stone-400 bg-stone-50 px-2 py-0.5 rounded-full border border-stone-100">{formatTimeRange(task)}</span>
+                </div>
+                {#if task.note}
+                  <div class="text-xs text-stone-400 mt-1 truncate">{task.note}</div>
+                {/if}
+              </div>
             </div>
           </div>
         {/each}

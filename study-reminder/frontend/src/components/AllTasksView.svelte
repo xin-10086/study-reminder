@@ -88,17 +88,17 @@
   <div class="flex-1 overflow-y-auto space-y-2">
     {#each allTasks as task}
       <div
-        class="flex items-center gap-3 px-4 py-3 rounded-xl border {PRIORITY_COLORS[task.priority]} cursor-pointer card-hover shadow-sm"
+        class="flex items-center gap-3 px-4 py-3 rounded-xl border {PRIORITY_COLORS[task.priority]} cursor-pointer card-hover shadow-sm hover:shadow-md transition-all"
         onclick={() => handleEdit(task)}
       >
         <button onclick={(e) => { e.stopPropagation(); handleToggle(task.id); }} class="flex-shrink-0">
-          <span class="w-5 h-5 rounded-md border-2 {task.completed ? 'bg-orange-500 border-orange-500 text-white' : 'border-stone-300'} flex items-center justify-center text-xs transition-colors">
+          <span class="w-5 h-5 rounded-md border-2 {task.completed ? 'bg-orange-500 border-orange-500 text-white' : 'border-stone-300'} flex items-center justify-center text-xs transition-colors hover:border-orange-400">
             {task.completed ? "✓" : ""}
           </span>
         </button>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
-            <span class="text-sm font-medium">{task.title}</span>
+            <span class="text-sm font-medium {task.completed ? 'line-through text-stone-400' : 'text-stone-800'}">{task.title}</span>
             {#if task.category}
               <span class="text-xs text-stone-400 bg-stone-100 px-1.5 py-0.5 rounded">{task.category}</span>
             {/if}
@@ -106,22 +106,22 @@
           <div class="flex items-center gap-2 mt-1 flex-wrap">
             {#if task.due_date}
               <span class="text-xs {isOverdue(task.due_date) ? 'text-red-600 font-medium' : 'text-stone-400'}">
-                截止 {task.due_date}
+                📅 截止 {task.due_date}
               </span>
             {/if}
             {#if task.has_time_slot && task.time_start}
-              <span class="text-xs text-stone-400 bg-stone-50 px-1.5 py-0.5 rounded">
-                {task.time_start}{task.time_end ? `-${task.time_end}` : ''}
+              <span class="text-xs text-stone-400 bg-stone-50 px-1.5 py-0.5 rounded border border-stone-100">
+                ⏰ {task.time_start}{task.time_end ? `-${task.time_end}` : ''}
               </span>
             {/if}
             {#if task.repeat_type !== "none"}
-              <span class="text-xs text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded">🔄 {getRepeatLabel(task.repeat_type)}</span>
+              <span class="text-xs text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">🔄 {getRepeatLabel(task.repeat_type)}</span>
             {/if}
           </div>
         </div>
         <div class="flex items-center gap-2 flex-shrink-0">
           {#if getUrgency(task)}
-            <span class="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200 font-medium">
+            <span class="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200 font-medium animate-pulse-slow">
               {getUrgency(task)}
             </span>
           {/if}

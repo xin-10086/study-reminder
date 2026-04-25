@@ -213,7 +213,7 @@
   <!-- 主窗口模式 -->
   <div class="h-screen w-screen flex flex-col bg-gradient-to-br from-orange-50 via-amber-50 to-stone-50">
     <!-- 顶部导航栏 -->
-    <header class="flex items-center justify-between px-5 py-3 bg-white/90 backdrop-blur-md border-b border-orange-200/40 shadow-sm">
+    <header class="flex items-center justify-between px-5 py-2.5 bg-white/95 backdrop-blur-lg border-b border-orange-200/30 shadow-sm">
       <div class="flex items-center gap-3">
         {#if $currentView === "month"}
           <div class="flex items-center gap-1 bg-stone-100 rounded-lg p-0.5">

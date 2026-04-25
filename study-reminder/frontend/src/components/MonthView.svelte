@@ -102,8 +102,9 @@
     {/each}
   </div>
 
-  <!-- 日期网格 - 圆角卡片风格 -->
-  <div class="flex-1 grid grid-cols-7 auto-rows-fr gap-2 p-0.5">
+  <!-- 日期网格 - 圆角卡片风格，支持纵向滚动 -->
+  <div class="flex-1 overflow-y-auto min-h-0">
+    <div class="grid grid-cols-7 gap-2 p-0.5">
     {#each Array(getDaysInMonth($currentYear, $currentMonth)) as _, i}
       {@const day = i + 1}
       {@const dateStr = formatDate($currentYear, $currentMonth, day)}
@@ -152,5 +153,6 @@
         </div>
       </button>
     {/each}
+    </div>
   </div>
 </div>

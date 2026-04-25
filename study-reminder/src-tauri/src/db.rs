@@ -140,6 +140,7 @@ impl Database {
         let mut stmt = conn.prepare(
             "SELECT * FROM tasks WHERE
                 completed = 0 AND (
+                    (repeat_type = 'none' AND due_date IS NULL AND remind_date IS NULL) OR
                     (repeat_type = 'none' AND (due_date >= ?1 AND due_date < ?2)) OR
                     (repeat_type = 'none' AND (remind_date >= ?1 AND remind_date < ?2)) OR
                     (repeat_type = 'daily' AND (repeat_end IS NULL OR repeat_end >= ?1)) OR

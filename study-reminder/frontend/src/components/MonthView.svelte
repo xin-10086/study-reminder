@@ -21,10 +21,14 @@
 
   function getTasksForDay(day: number) {
     const dateStr = formatDate($currentYear, $currentMonth, day);
+    const todayStr = new Date().toISOString().slice(0, 10);
     return ($tasks || []).filter((t) => {
+      // 有截止日期或提醒日期的任务
       if (t.due_date === dateStr || t.remind_date === dateStr) return true;
       // 周期任务显示在每一天
       if (t.repeat_type !== "none") return true;
+      // 没有设置任何日期的任务，只显示在今天
+      if (!t.due_date && !t.remind_date && dateStr === todayStr) return true;
       return false;
     });
   }
@@ -92,7 +96,7 @@
         <div class="flex-1 overflow-hidden mt-0.5 space-y-0.5">
           {#each dayTasks.slice(0, 3) as task}
             <div
-              class="text-[10px] leading-tight px-1 rounded truncate {$PRIORITY_COLORS[task.priority] || 'bg-stone-100 text-stone-600'}"
+              class="text-[10px] leading-tight px-1 rounded truncate {PRIORITY_COLORS[task.priority] || 'bg-stone-100 text-stone-600'}"
             >
               {task.title}
               {#if task.due_date === dateStr && task.repeat_type === "none"}

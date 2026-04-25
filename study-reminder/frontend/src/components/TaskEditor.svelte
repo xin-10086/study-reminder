@@ -75,7 +75,6 @@
 
     // 如果没有设置任何日期，默认使用当前选中的日期（日视图中的日期）
     const defaultDate = $selectedDate || new Date().toISOString().slice(0, 10);
-    console.log("TaskEditor: selectedDate =", $selectedDate, "defaultDate =", defaultDate);
     const finalRemindDate = remindDate || (hasDueDate && dueDate ? dueDate : defaultDate);
     const finalDueDate = hasDueDate && dueDate ? dueDate : null;
 

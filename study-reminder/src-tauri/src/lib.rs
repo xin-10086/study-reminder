@@ -75,6 +75,7 @@ pub fn run() {
             commands::toggle_main_window,
             commands::toggle_autostart,
             commands::get_autostart_status,
+            commands::start_drag_floating,
         ])
         .run(tauri::generate_context!())
         .expect("启动应用失败");
@@ -114,20 +115,20 @@ fn setup_floating_window<R: Runtime>(app: &AppHandle<R>) -> Result<(), Box<dyn s
 
         log::info!("悬浮窗已创建: floating");
 
-        // 注入悬浮窗 UI（仅图标，无悬停面板）
+        // 注入悬浮窗 UI（可拖拽图标）
         let fw = float_window.clone();
         std::thread::spawn(move || {
             std::thread::sleep(std::time::Duration::from_millis(3000));
             
             let js = r#"
                 document.open();
-                document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><style>*{margin:0;padding:0;box-sizing:border-box}body{width:50px;height:50px;overflow:hidden;background:transparent;font-family:"Segoe UI",sans-serif}#float-icon{width:44px;height:44px;background:linear-gradient(135deg,#f97316,#ea580c);border-radius:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(0,0,0,0.25);position:absolute;top:3px;left:3px;cursor:pointer;font-size:20px;user-select:none;transition:transform .15s ease}#float-icon:hover{transform:scale(1.1)}</style></head><body><div id="float-icon" onclick="if(window.__TAURI_INTERNALS__&&window.__TAURI_INTERNALS__.invoke)window.__TAURI_INTERNALS__.invoke(\'toggle_main_window\')">📋</div></body></html>');
+                document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><style>*{margin:0;padding:0;box-sizing:border-box}body{width:50px;height:50px;overflow:hidden;background:transparent;font-family:"Segoe UI",sans-serif}#float-icon{width:44px;height:44px;background:linear-gradient(135deg,#f97316,#ea580c);border-radius:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(0,0,0,0.25);position:absolute;top:3px;left:3px;cursor:grab;font-size:20px;user-select:none}#float-icon:active{cursor:grabbing}</style></head><body><div id="float-icon">📋</div><script>(function(){var i=document.getElementById("float-icon");i.addEventListener("mousedown",function(e){e.preventDefault();if(window.__TAURI_INTERNALS__&&window.__TAURI_INTERNALS__.invoke){window.__TAURI_INTERNALS__.invoke("start_drag_floating")}});i.addEventListener("click",function(){if(window.__TAURI_INTERNALS__&&window.__TAURI_INTERNALS__.invoke){window.__TAURI_INTERNALS__.invoke("toggle_main_window")}})})();<\/script></body></html>');
                 document.close();
-                console.log("悬浮窗图标已设置");
+                console.log("悬浮窗图标已设置（可拖拽）");
             "#;
             
             match fw.eval(js) {
-                Ok(_) => log::info!("悬浮窗图标注入成功"),
+                Ok(_) => log::info!("悬浮窗图标注入成功（可拖拽）"),
                 Err(e) => log::error!("悬浮窗图标注入失败: {:?}", e),
             }
         });

@@ -82,3 +82,13 @@ pub fn get_autostart_status(app: AppHandle) -> Result<bool, String> {
     let autostart = app.autolaunch();
     Ok(autostart.is_enabled().map_err(|e| format!("获取状态失败: {}", e))?)
 }
+
+/// 开始拖拽悬浮窗（使用原生窗口拖拽）
+#[tauri::command]
+pub fn start_drag_floating(app: AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("floating") {
+        // Tauri 2.x: 使用 start_dragging() 方法
+        window.start_dragging().map_err(|e| format!("拖拽失败: {}", e))?;
+    }
+    Ok(())
+}

@@ -22,11 +22,35 @@
   function getTasksForDay(day: number) {
     const dateStr = formatDate($currentYear, $currentMonth, day);
     const todayStr = new Date().toISOString().slice(0, 10);
+    const date = new Date($currentYear, $currentMonth - 1, day);
+    const dayOfWeek = date.getDay(); // 0=周日, 1=周一, ... 6=周六
+
     return ($tasks || []).filter((t) => {
       // 有截止日期或提醒日期的任务
       if (t.due_date === dateStr || t.remind_date === dateStr) return true;
-      // 周期任务显示在每一天
-      if (t.repeat_type !== "none") return true;
+
+      // 周期任务：根据类型判断是否显示在今天
+      if (t.repeat_type !== "none") {
+        // 检查是否超过重复结束日期
+        if (t.repeat_end && dateStr > t.repeat_end) return false;
+
+        if (t.repeat_type === "daily") {
+          return true; // 每天显示
+        }
+        if (t.repeat_type === "weekdays") {
+          return dayOfWeek >= 1 && dayOfWeek <= 5; // 周一至周五
+        }
+        if (t.repeat_type === "weekly" && t.repeat_days) {
+          // 将 repeat_days "1,3,5" 转为数字数组，注意数据库存的是 1=周一, 7=周日
+          const days = t.repeat_days.split(",").map(Number);
+          // dayOfWeek: 0=周日, 1=周一, ... 6=周六
+          // 需要将 dayOfWeek 转为 1=周一, 7=周日 的格式
+          const mappedDay = dayOfWeek === 0 ? 7 : dayOfWeek;
+          return days.includes(mappedDay);
+        }
+        return false;
+      }
+
       // 没有设置任何日期的任务，只显示在今天
       if (!t.due_date && !t.remind_date && dateStr === todayStr) return true;
       return false;

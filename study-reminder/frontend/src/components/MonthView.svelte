@@ -102,8 +102,8 @@
     {/each}
   </div>
 
-  <!-- 日期网格 -->
-  <div class="grid grid-cols-7 flex-1 gap-[1px] bg-stone-200 rounded-xl overflow-hidden">
+  <!-- 日期网格 - 圆角卡片风格 -->
+  <div class="flex-1 grid grid-cols-7 auto-rows-fr gap-2 p-0.5">
     {#each Array(getDaysInMonth($currentYear, $currentMonth)) as _, i}
       {@const day = i + 1}
       {@const dateStr = formatDate($currentYear, $currentMonth, day)}
@@ -112,34 +112,36 @@
       <!-- 用空白占位调整第一行偏移 -->
       {#if i === 0}
         {#each Array(firstDay === 0 ? 6 : firstDay - 1) as _}
-          <div class="bg-stone-50"></div>
+          <div></div>
         {/each}
       {/if}
 
       <button
         onclick={() => onselect(dateStr)}
-        class="bg-white p-1.5 text-left hover:bg-orange-50 transition-colors min-h-[72px] flex flex-col group {$currentView === 'day' && $selectedDate === dateStr ? 'ring-2 ring-orange-400 ring-inset' : ''}"
+        class="bg-white rounded-xl p-2 text-left hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 min-h-[80px] flex flex-col group border border-stone-100 shadow-sm
+          {$currentView === 'day' && $selectedDate === dateStr ? 'ring-2 ring-orange-400 shadow-md' : ''}
+          {isToday(day) ? 'border-orange-300 bg-orange-50/40' : ''}"
       >
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between mb-1">
           <span
-            class="text-xs font-medium px-1.5 py-0.5 rounded-md inline-block w-fit
+            class="text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full
               {isToday(day) ? 'bg-orange-500 text-white shadow-sm' : isWeekend(day) ? 'text-stone-400' : 'text-stone-600'}"
           >
             {day}
           </span>
           {#if dayTasks.length > 0}
-            <span class="text-[10px] text-stone-400 opacity-0 group-hover:opacity-100 transition-opacity">{dayTasks.length}项</span>
+            <span class="text-[10px] font-medium text-stone-400 bg-stone-100 px-1.5 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">{dayTasks.length}项</span>
           {/if}
         </div>
-        <div class="flex-1 overflow-hidden mt-1 space-y-0.5">
+        <div class="flex-1 overflow-hidden space-y-1">
           {#each dayTasks.slice(0, 3) as task}
             <div
-              class="text-[10px] leading-tight px-1.5 py-0.5 rounded truncate {PRIORITY_COLORS[task.priority] || 'bg-stone-100 text-stone-600'}"
+              class="text-[10px] leading-tight px-1.5 py-0.5 rounded-md truncate font-medium shadow-sm {PRIORITY_COLORS[task.priority] || 'bg-stone-100 text-stone-600'}"
             >
               <span class="flex items-center gap-1">
                 <span class="truncate">{task.title}</span>
                 {#if task.due_date === dateStr && task.repeat_type === "none"}
-                  <span class="text-red-500 font-bold flex-shrink-0">DDL</span>
+                  <span class="text-red-500 text-[8px] font-bold flex-shrink-0 bg-red-50 px-1 rounded">DDL</span>
                 {/if}
               </span>
             </div>

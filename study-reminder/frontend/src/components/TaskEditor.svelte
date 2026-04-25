@@ -111,48 +111,51 @@
 
 <!-- 遮罩层 -->
 <div
-  class="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
+  class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50"
   onclick={onclose}
 >
   <!-- 弹窗 -->
   <div
-    class="bg-white rounded-xl shadow-xl w-[480px] max-h-[90vh] overflow-y-auto animate-fade-in"
+    class="bg-white rounded-2xl shadow-2xl w-[500px] max-h-[85vh] overflow-y-auto animate-fade-in"
     onclick={(e) => e.stopPropagation()}
   >
     <!-- 标题 -->
-    <div class="flex items-center justify-between px-5 py-3 border-b border-stone-200">
-      <h2 class="text-base font-semibold text-stone-800">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-stone-100">
+      <h2 class="text-base font-semibold text-stone-800 flex items-center gap-2">
+        <span class="w-1.5 h-5 bg-gradient-to-b from-orange-500 to-amber-500 rounded-full"></span>
         {isEdit ? "编辑任务" : "新建任务"}
       </h2>
-      <button onclick={onclose} class="text-stone-400 hover:text-stone-600 text-lg">✕</button>
+      <button onclick={onclose} class="w-7 h-7 flex items-center justify-center text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-lg text-sm transition-colors">
+        ✕
+      </button>
     </div>
 
     <!-- 表单 -->
-    <div class="p-5 space-y-4">
+    <div class="p-6 space-y-5">
       <!-- 标题 -->
       <div>
-        <label class="block text-xs font-medium text-stone-500 mb-1">标题</label>
+        <label class="block text-xs font-medium text-stone-500 mb-1.5">标题</label>
         <input
           bind:value={title}
           type="text"
           placeholder="输入任务标题"
-          class="w-full px-3 py-2 border border-stone-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+          class="w-full px-4 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all"
         />
       </div>
 
       <!-- 优先级 + 类别 -->
-      <div class="flex gap-3">
+      <div class="flex gap-4">
         <div class="flex-1">
-          <label class="block text-xs font-medium text-stone-500 mb-1">优先级</label>
-          <select bind:value={priority} class="w-full px-3 py-2 border border-stone-300 rounded text-sm">
-            <option value={1}>高</option>
-            <option value={2}>中</option>
-            <option value={3}>低</option>
+          <label class="block text-xs font-medium text-stone-500 mb-1.5">优先级</label>
+          <select bind:value={priority} class="w-full px-4 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all appearance-none bg-white">
+            <option value={1}>🔴 高</option>
+            <option value={2}>🟡 中</option>
+            <option value={3}>⚪ 低</option>
           </select>
         </div>
         <div class="flex-1">
-          <label class="block text-xs font-medium text-stone-500 mb-1">类别</label>
-          <select bind:value={category} class="w-full px-3 py-2 border border-stone-300 rounded text-sm">
+          <label class="block text-xs font-medium text-stone-500 mb-1.5">类别</label>
+          <select bind:value={category} class="w-full px-4 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all appearance-none bg-white">
             {#each CATEGORIES as cat}
               <option value={cat}>{cat}</option>
             {/each}
@@ -162,19 +165,24 @@
 
       <!-- 截止日期 -->
       <div>
-        <label class="flex items-center gap-2 text-sm">
-          <input type="checkbox" bind:checked={hasDueDate} class="rounded" />
+        <label class="flex items-center gap-2.5 text-sm cursor-pointer select-none group">
+          <div class="relative">
+            <input type="checkbox" bind:checked={hasDueDate} class="sr-only" />
+            <div class="w-4 h-4 rounded border-2 {hasDueDate ? 'bg-orange-500 border-orange-500' : 'border-stone-300'} flex items-center justify-center transition-colors group-hover:border-orange-400">
+              {#if hasDueDate}<span class="text-white text-[10px]">✓</span>{/if}
+            </div>
+          </div>
           <span class="text-xs font-medium text-stone-500">有截止日期</span>
         </label>
         {#if hasDueDate}
-          <div class="flex gap-3 mt-2">
+          <div class="flex gap-3 mt-3">
             <div class="flex-1">
-              <label class="block text-xs text-stone-400 mb-0.5">截止日期</label>
-              <input bind:value={dueDate} type="date" class="w-full px-3 py-2 border border-stone-300 rounded text-sm" />
+              <label class="block text-xs text-stone-400 mb-1">截止日期</label>
+              <input bind:value={dueDate} type="date" class="w-full px-4 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all" />
             </div>
             <div class="flex-1">
-              <label class="block text-xs text-stone-400 mb-0.5">提醒日期</label>
-              <input bind:value={remindDate} type="date" class="w-full px-3 py-2 border border-stone-300 rounded text-sm" />
+              <label class="block text-xs text-stone-400 mb-1">提醒日期</label>
+              <input bind:value={remindDate} type="date" class="w-full px-4 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all" />
             </div>
           </div>
         {/if}
@@ -182,19 +190,24 @@
 
       <!-- 时间段 -->
       <div>
-        <label class="flex items-center gap-2 text-sm">
-          <input type="checkbox" bind:checked={hasTimeSlot} class="rounded" />
+        <label class="flex items-center gap-2.5 text-sm cursor-pointer select-none group">
+          <div class="relative">
+            <input type="checkbox" bind:checked={hasTimeSlot} class="sr-only" />
+            <div class="w-4 h-4 rounded border-2 {hasTimeSlot ? 'bg-orange-500 border-orange-500' : 'border-stone-300'} flex items-center justify-center transition-colors group-hover:border-orange-400">
+              {#if hasTimeSlot}<span class="text-white text-[10px]">✓</span>{/if}
+            </div>
+          </div>
           <span class="text-xs font-medium text-stone-500">安排时间段</span>
         </label>
         {#if hasTimeSlot}
-          <div class="flex gap-3 mt-2">
+          <div class="flex gap-3 mt-3">
             <div class="flex-1">
-              <label class="block text-xs text-stone-400 mb-0.5">开始</label>
-              <input bind:value={timeStart} type="time" class="w-full px-3 py-2 border border-stone-300 rounded text-sm" />
+              <label class="block text-xs text-stone-400 mb-1">开始</label>
+              <input bind:value={timeStart} type="time" class="w-full px-4 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all" />
             </div>
             <div class="flex-1">
-              <label class="block text-xs text-stone-400 mb-0.5">结束</label>
-              <input bind:value={timeEnd} type="time" class="w-full px-3 py-2 border border-stone-300 rounded text-sm" />
+              <label class="block text-xs text-stone-400 mb-1">结束</label>
+              <input bind:value={timeEnd} type="time" class="w-full px-4 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all" />
             </div>
           </div>
         {/if}
@@ -202,23 +215,28 @@
 
       <!-- 周期性 -->
       <div>
-        <label class="flex items-center gap-2 text-sm">
-          <input type="checkbox" bind:checked={hasRepeat} class="rounded" />
+        <label class="flex items-center gap-2.5 text-sm cursor-pointer select-none group">
+          <div class="relative">
+            <input type="checkbox" bind:checked={hasRepeat} class="sr-only" />
+            <div class="w-4 h-4 rounded border-2 {hasRepeat ? 'bg-orange-500 border-orange-500' : 'border-stone-300'} flex items-center justify-center transition-colors group-hover:border-orange-400">
+              {#if hasRepeat}<span class="text-white text-[10px]">✓</span>{/if}
+            </div>
+          </div>
           <span class="text-xs font-medium text-stone-500">周期性任务</span>
         </label>
         {#if hasRepeat}
-          <div class="mt-2 space-y-2">
-            <select bind:value={repeatType} class="w-full px-3 py-2 border border-stone-300 rounded text-sm">
+          <div class="mt-3 space-y-3">
+            <select bind:value={repeatType} class="w-full px-4 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all appearance-none bg-white">
               <option value="daily">每天</option>
               <option value="weekly">每周（选择星期）</option>
               <option value="weekdays">工作日（周一至周五）</option>
             </select>
             {#if repeatType === "weekly"}
-              <div class="flex gap-1">
+              <div class="flex gap-1.5">
                 {#each WEEKDAYS as wd}
                   <button
                     onclick={() => toggleDay(wd.value)}
-                    class="w-8 h-8 text-xs rounded {repeatDays.includes(wd.value) ? 'bg-orange-500 text-white' : 'bg-stone-100 text-stone-600'} hover:bg-orange-200"
+                    class="w-9 h-9 text-xs font-medium rounded-xl transition-all {repeatDays.includes(wd.value) ? 'bg-orange-500 text-white shadow-sm shadow-orange-200' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}"
                   >
                     {wd.label}
                   </button>
@@ -226,8 +244,8 @@
               </div>
             {/if}
             <div>
-              <label class="block text-xs text-stone-400 mb-0.5">结束日期（可选）</label>
-              <input bind:value={repeatEnd} type="date" class="w-full px-3 py-2 border border-stone-300 rounded text-sm" />
+              <label class="block text-xs text-stone-400 mb-1">结束日期（可选）</label>
+              <input bind:value={repeatEnd} type="date" class="w-full px-4 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all" />
             </div>
           </div>
         {/if}
@@ -235,36 +253,36 @@
 
       <!-- 备注 -->
       <div>
-        <label class="block text-xs font-medium text-stone-500 mb-1">备注（可选）</label>
+        <label class="block text-xs font-medium text-stone-500 mb-1.5">备注（可选）</label>
         <textarea
           bind:value={note}
           rows={2}
           placeholder="添加备注..."
-          class="w-full px-3 py-2 border border-stone-300 rounded text-sm resize-none"
+          class="w-full px-4 py-2.5 border border-stone-200 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 transition-all"
         ></textarea>
       </div>
     </div>
 
     <!-- 按钮 -->
-    <div class="flex justify-between gap-2 px-5 py-3 border-t border-stone-200 bg-stone-50 rounded-b-xl">
+    <div class="flex justify-between gap-3 px-6 py-4 border-t border-stone-100 bg-stone-50/50 rounded-b-2xl">
       <div>
         {#if isEdit}
           <button
             onclick={async () => { if (confirm("确定删除此任务？")) { await deleteTask($editingTask!.id); onclose(); } }}
-            class="px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded border border-red-200"
+            class="flex items-center gap-1.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-xl border border-red-200 transition-colors btn-press"
           >
             🗑 删除
           </button>
         {/if}
       </div>
       <div class="flex gap-2">
-        <button onclick={onclose} class="px-4 py-2 text-sm text-stone-600 hover:bg-stone-100 rounded">
+        <button onclick={onclose} class="px-5 py-2 text-sm text-stone-600 hover:bg-stone-100 rounded-xl transition-colors btn-press">
           取消
         </button>
         <button
           onclick={handleSave}
           disabled={saving}
-          class="px-4 py-2 text-sm bg-orange-500 text-white rounded hover:bg-orange-600 disabled:opacity-50"
+          class="px-5 py-2 text-sm bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl hover:from-orange-600 hover:to-amber-600 shadow-sm shadow-orange-200 transition-all disabled:opacity-50 btn-press"
         >
           {saving ? "保存中..." : "保存"}
         </button>

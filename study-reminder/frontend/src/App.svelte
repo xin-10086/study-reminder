@@ -194,6 +194,12 @@
       default: return "bg-stone-100 text-stone-500";
     }
   }
+
+  function formatDateDisplay(dateStr: string): string {
+    const d = new Date(dateStr + "T00:00:00");
+    const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
+    return `${dateStr} 周${weekdays[d.getDay()]}`;
+  }
 </script>
 
 <!-- 悬浮窗模式：仅显示图标，点击打开主窗口 -->
@@ -205,77 +211,91 @@
   </div>
 {:else}
   <!-- 主窗口模式 -->
-  <div class="h-screen w-screen flex flex-col bg-gradient-to-br from-orange-50 to-amber-50">
+  <div class="h-screen w-screen flex flex-col bg-gradient-to-br from-orange-50 via-amber-50 to-stone-50">
     <!-- 顶部导航栏 -->
-    <header class="flex items-center justify-between px-4 py-2.5 bg-white/80 backdrop-blur-sm border-b border-orange-200/60 shadow-sm">
-      <div class="flex items-center gap-2">
+    <header class="flex items-center justify-between px-5 py-3 bg-white/90 backdrop-blur-md border-b border-orange-200/40 shadow-sm">
+      <div class="flex items-center gap-3">
         {#if $currentView === "month"}
-          <button onclick={goToPrevMonth} class="px-2 py-1 text-orange-600 hover:bg-orange-100 rounded text-lg transition-colors">
-            ◀
-          </button>
-          <span class="text-lg font-semibold text-stone-800">
-            {$currentYear}年{$currentMonth}月
-          </span>
-          <button onclick={goToNextMonth} class="px-2 py-1 text-orange-600 hover:bg-orange-100 rounded text-lg transition-colors">
-            ▶
-          </button>
+          <div class="flex items-center gap-1 bg-stone-100 rounded-lg p-0.5">
+            <button onclick={goToPrevMonth} class="px-2 py-1 text-orange-600 hover:bg-white rounded-md text-sm transition-colors btn-press">
+              ◀
+            </button>
+            <span class="px-3 text-sm font-semibold text-stone-800 min-w-[100px] text-center">
+              {$currentYear}年{$currentMonth}月
+            </span>
+            <button onclick={goToNextMonth} class="px-2 py-1 text-orange-600 hover:bg-white rounded-md text-sm transition-colors btn-press">
+              ▶
+            </button>
+          </div>
         {:else if $currentView === "day"}
-          <button onclick={() => switchView("month")} class="px-3 py-1 text-sm bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors">
-            ← 月视图
+          <button onclick={() => switchView("month")} class="flex items-center gap-1 px-3 py-1.5 text-sm bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 transition-colors btn-press">
+            <span>◀</span>
+            <span>月视图</span>
           </button>
-          <span class="text-lg font-semibold text-stone-800 ml-2">{$selectedDate}</span>
+          <div class="flex items-center gap-2 ml-1">
+            <span class="text-base font-semibold text-stone-800">{$selectedDate}</span>
+            <span class="text-xs text-stone-400 bg-stone-100 px-2 py-0.5 rounded-full">
+              {formatDateDisplay($selectedDate).split(" ")[1]}
+            </span>
+          </div>
         {:else}
-          <button onclick={() => switchView("month")} class="px-3 py-1 text-sm bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors">
-            ← 月视图
+          <button onclick={() => switchView("month")} class="flex items-center gap-1 px-3 py-1.5 text-sm bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 transition-colors btn-press">
+            <span>◀</span>
+            <span>月视图</span>
           </button>
-          <span class="text-lg font-semibold text-stone-800 ml-2">全部任务</span>
+          <span class="text-base font-semibold text-stone-800 ml-1">全部任务</span>
         {/if}
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1.5">
         <button
           onclick={() => switchView("all")}
-          class="px-3 py-1 text-sm rounded-lg {$currentView === 'all' ? 'bg-orange-500 text-white shadow-sm' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'} transition-colors"
+          class="px-3 py-1.5 text-sm rounded-lg transition-all btn-press {$currentView === 'all' ? 'bg-orange-500 text-white shadow-sm shadow-orange-200' : 'text-stone-500 hover:bg-stone-100'}"
         >
           全部任务
         </button>
         <button
           onclick={handleExport}
-          class="px-3 py-1 text-sm rounded-lg bg-stone-100 text-stone-600 hover:bg-stone-200 transition-colors"
+          class="px-3 py-1.5 text-sm rounded-lg text-stone-500 hover:bg-stone-100 transition-colors btn-press"
           title="导出为 JSON"
         >
-          📤 导出
+          📤
         </button>
         <button
           onclick={() => showSettings = !showSettings}
-          class="px-3 py-1 text-sm rounded-lg bg-stone-100 text-stone-600 hover:bg-stone-200 transition-colors"
+          class="px-3 py-1.5 text-sm rounded-lg text-stone-500 hover:bg-stone-100 transition-colors btn-press"
           title="设置"
         >
           ⚙️
         </button>
+        <div class="w-px h-5 bg-stone-200 mx-1"></div>
         <button
           onclick={openNewTask}
-          class="px-3 py-1 text-sm bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 shadow-sm transition-all"
+          class="flex items-center gap-1 px-4 py-1.5 text-sm bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 shadow-sm shadow-orange-200 transition-all btn-press"
         >
-          + 新建
+          <span class="text-base leading-none">+</span>
+          <span>新建</span>
         </button>
       </div>
     </header>
 
     <!-- 设置面板 -->
     {#if showSettings}
-      <div class="bg-white/90 backdrop-blur-sm border-b border-orange-200/60 px-4 py-3">
+      <div class="bg-white/95 backdrop-blur-md border-b border-orange-200/40 px-5 py-3 animate-slide-up">
         <div class="max-w-2xl mx-auto flex items-center gap-6">
-          <h3 class="text-sm font-semibold text-stone-700">⚙️ 设置</h3>
+          <h3 class="text-sm font-semibold text-stone-700 flex items-center gap-1.5">
+            <span>⚙️</span>
+            <span>设置</span>
+          </h3>
 
           <!-- 开机自启 -->
-          <label class="flex items-center gap-2 cursor-pointer">
+          <label class="flex items-center gap-2 cursor-pointer group">
             <button
               onclick={handleToggleAutostart}
-              class="relative w-10 h-5 rounded-full transition-colors {autostartEnabled ? 'bg-orange-500' : 'bg-stone-300'}"
+              class="relative w-10 h-5 rounded-full transition-colors {autostartEnabled ? 'bg-orange-500' : 'bg-stone-300'} group-hover:shadow-sm"
             >
               <span
-                class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform {autostartEnabled ? 'translate-x-5' : 'translate-x-0.5'}"
+                class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-all {autostartEnabled ? 'translate-x-5' : 'translate-x-0.5'}"
               ></span>
             </button>
             <span class="text-sm text-stone-600">开机自启</span>
@@ -284,7 +304,7 @@
           <!-- 通知状态 -->
           <div class="flex items-center gap-2">
             <span class="text-sm text-stone-600">通知：</span>
-            <span class="text-xs px-2 py-0.5 rounded {notificationGranted ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+            <span class="text-xs px-2 py-0.5 rounded-full {notificationGranted ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}">
               {notificationGranted ? '已开启' : '未授权'}
             </span>
           </div>
@@ -331,7 +351,7 @@
     align-items: center;
     justify-content: center;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
-    transition: transform 0.15s ease;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
     position: absolute;
     top: 3px;
     left: 3px;
@@ -340,6 +360,11 @@
 
   :global(.floating-icon:hover) {
     transform: scale(1.1);
+    box-shadow: 0 4px 14px rgba(249, 115, 22, 0.4);
+  }
+
+  :global(.floating-icon:active) {
+    transform: scale(0.95);
   }
 
   :global(.icon-text) {

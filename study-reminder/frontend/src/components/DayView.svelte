@@ -23,9 +23,7 @@
   // 监听编辑弹窗关闭后重新加载
   $effect(() => {
     const editorOpen = $showEditor;
-    // 当编辑器关闭时（从 true 变为 false），重新加载数据
     if (!editorOpen && $selectedDate) {
-      // 使用 setTimeout 确保编辑器状态已完全更新
       setTimeout(() => loadDayData(), 100);
     }
   });
@@ -79,36 +77,61 @@
     if (task.time_start) return task.time_start;
     return "";
   }
+
+  function getPriorityDot(priority: number): string {
+    switch (priority) {
+      case 1: return "bg-red-500";
+      case 2: return "bg-yellow-500";
+      case 3: return "bg-gray-400";
+      default: return "bg-stone-400";
+    }
+  }
+
+  function getPriorityBorder(priority: number): string {
+    switch (priority) {
+      case 1: return "border-l-red-400";
+      case 2: return "border-l-yellow-400";
+      case 3: return "border-l-gray-400";
+      default: return "border-l-stone-400";
+    }
+  }
 </script>
 
-<div class="h-full flex flex-col p-4 overflow-y-auto">
+<div class="h-full flex flex-col p-5 overflow-y-auto">
   <!-- 全天任务区 -->
   {#if allDayTasks.length > 0}
-    <div class="mb-4">
-      <h3 class="text-sm font-semibold text-stone-500 mb-2">📋 全天任务</h3>
+    <div class="mb-5">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-sm font-semibold text-stone-500">📋 全天任务</span>
+        <span class="text-xs text-stone-400 bg-stone-100 px-2 py-0.5 rounded-full">{allDayTasks.length}项</span>
+      </div>
       <div class="space-y-2">
         {#each allDayTasks as task}
           <div
-            class="flex items-center gap-2 px-3 py-2 rounded border {PRIORITY_COLORS[task.priority]} cursor-pointer hover:shadow-sm transition-shadow"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl border {PRIORITY_COLORS[task.priority]} cursor-pointer card-hover shadow-sm"
             onclick={() => handleEdit(task)}
           >
             <button onclick={(e) => { e.stopPropagation(); handleToggle(task.id); }} class="flex-shrink-0">
-              <span class="w-5 h-5 rounded border-2 border-stone-300 flex items-center justify-center text-xs">
+              <span class="w-5 h-5 rounded-md border-2 {task.completed ? 'bg-orange-500 border-orange-500 text-white' : 'border-stone-300'} flex items-center justify-center text-xs transition-colors">
                 {task.completed ? "✓" : ""}
               </span>
             </button>
             <div class="flex-1 min-w-0">
-              <span class="text-sm font-medium">{task.title}</span>
-              {#if task.due_date}
-                <span class="text-xs ml-2 {isOverdue(task.due_date) ? 'text-red-600 font-bold' : 'text-stone-400'}">
-                  {isOverdue(task.due_date) ? "逾期!" : `截止:${task.due_date}`}
-                </span>
-              {/if}
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-medium {task.completed ? 'line-through text-stone-400' : ''}">{task.title}</span>
+                {#if task.due_date}
+                  <span class="text-xs px-1.5 py-0.5 rounded-full {isOverdue(task.due_date) ? 'bg-red-50 text-red-600 border border-red-200 font-medium' : 'bg-stone-100 text-stone-500'}">
+                    {isOverdue(task.due_date) ? "逾期!" : `截止 ${task.due_date}`}
+                  </span>
+                {/if}
+              </div>
             </div>
-            <span class="text-xs px-1.5 py-0.5 rounded bg-white/50">{PRIORITY_LABELS[task.priority]}</span>
-            <button onclick={(e) => { e.stopPropagation(); handleDelete(task.id); }} class="text-stone-400 hover:text-red-500 text-xs">
-              ✕
-            </button>
+            <div class="flex items-center gap-2">
+              <span class="text-xs px-2 py-0.5 rounded-full bg-white/70 text-stone-500 border border-stone-200">{PRIORITY_LABELS[task.priority]}</span>
+              <button onclick={(e) => { e.stopPropagation(); handleDelete(task.id); }} class="w-6 h-6 flex items-center justify-center text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-md text-xs transition-colors">
+                ✕
+              </button>
+            </div>
           </div>
         {/each}
       </div>
@@ -117,26 +140,34 @@
 
   <!-- 时间安排区 -->
   {#if timeSlots.length > 0}
-    <div class="mb-4">
-      <h3 class="text-sm font-semibold text-stone-500 mb-2">⏰ 时间安排</h3>
-      <div class="space-y-1">
+    <div class="mb-5">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-sm font-semibold text-stone-500">⏰ 时间安排</span>
+        <span class="text-xs text-stone-400 bg-stone-100 px-2 py-0.5 rounded-full">{timeSlots.length}项</span>
+      </div>
+      <div class="space-y-1 relative">
+        <!-- 时间轴竖线 -->
+        <div class="absolute left-[60px] top-0 bottom-0 w-px bg-stone-200"></div>
         {#each timeSlots as task}
           <div
-            class="flex items-stretch gap-2 cursor-pointer hover:opacity-80"
+            class="flex items-stretch gap-3 cursor-pointer group"
             onclick={() => handleEdit(task)}
           >
-            <div class="w-14 flex-shrink-0 text-right text-xs text-stone-400 pt-1">
+            <div class="w-14 flex-shrink-0 text-right text-xs text-stone-400 pt-3 font-mono">
               {task.time_start || ""}
             </div>
             <div
-              class="flex-1 px-3 py-2 rounded border-l-4 {task.priority === 1 ? 'border-l-red-400' : task.priority === 2 ? 'border-l-yellow-400' : 'border-l-gray-400'} bg-white shadow-sm"
+              class="flex-1 px-4 py-3 rounded-xl border-l-4 {getPriorityBorder(task.priority)} bg-white shadow-sm card-hover ml-3"
             >
               <div class="flex items-center justify-between">
-                <span class="text-sm font-medium">{task.title}</span>
-                <span class="text-xs text-stone-400">{formatTimeRange(task)}</span>
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full {getPriorityDot(task.priority)}"></span>
+                  <span class="text-sm font-medium">{task.title}</span>
+                </div>
+                <span class="text-xs text-stone-400 bg-stone-50 px-2 py-0.5 rounded-full">{formatTimeRange(task)}</span>
               </div>
               {#if task.note}
-                <div class="text-xs text-stone-400 mt-0.5 truncate">{task.note}</div>
+                <div class="text-xs text-stone-400 mt-1 ml-4 truncate">{task.note}</div>
               {/if}
             </div>
           </div>
@@ -148,28 +179,35 @@
   <!-- 未安排时间区 -->
   {#if noTimeTasks.length > 0}
     <div>
-      <h3 class="text-sm font-semibold text-stone-500 mb-2">📝 未安排时间</h3>
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-sm font-semibold text-stone-500">📝 未安排时间</span>
+        <span class="text-xs text-stone-400 bg-stone-100 px-2 py-0.5 rounded-full">{noTimeTasks.length}项</span>
+      </div>
       <div class="space-y-2">
         {#each noTimeTasks as task}
           <div
-            class="flex items-center gap-2 px-3 py-2 rounded border {PRIORITY_COLORS[task.priority]} cursor-pointer hover:shadow-sm transition-shadow"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl border {PRIORITY_COLORS[task.priority]} cursor-pointer card-hover shadow-sm"
             onclick={() => handleEdit(task)}
           >
             <button onclick={(e) => { e.stopPropagation(); handleToggle(task.id); }} class="flex-shrink-0">
-              <span class="w-5 h-5 rounded border-2 border-stone-300 flex items-center justify-center text-xs">
+              <span class="w-5 h-5 rounded-md border-2 {task.completed ? 'bg-orange-500 border-orange-500 text-white' : 'border-stone-300'} flex items-center justify-center text-xs transition-colors">
                 {task.completed ? "✓" : ""}
               </span>
             </button>
             <div class="flex-1 min-w-0">
-              <span class="text-sm font-medium">{task.title}</span>
-              {#if task.category}
-                <span class="text-xs text-stone-400 ml-1">({task.category})</span>
-              {/if}
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-medium {task.completed ? 'line-through text-stone-400' : ''}">{task.title}</span>
+                {#if task.category}
+                  <span class="text-xs text-stone-400 bg-stone-100 px-1.5 py-0.5 rounded">{task.category}</span>
+                {/if}
+              </div>
             </div>
-            <span class="text-xs px-1.5 py-0.5 rounded bg-white/50">{PRIORITY_LABELS[task.priority]}</span>
-            <button onclick={(e) => { e.stopPropagation(); handleDelete(task.id); }} class="text-stone-400 hover:text-red-500 text-xs">
-              ✕
-            </button>
+            <div class="flex items-center gap-2">
+              <span class="text-xs px-2 py-0.5 rounded-full bg-white/70 text-stone-500 border border-stone-200">{PRIORITY_LABELS[task.priority]}</span>
+              <button onclick={(e) => { e.stopPropagation(); handleDelete(task.id); }} class="w-6 h-6 flex items-center justify-center text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-md text-xs transition-colors">
+                ✕
+              </button>
+            </div>
           </div>
         {/each}
       </div>
@@ -178,10 +216,11 @@
 
   <!-- 空状态 -->
   {#if dayTasks.length === 0}
-    <div class="flex-1 flex items-center justify-center text-stone-400">
-      <div class="text-center">
-        <div class="text-4xl mb-2">📭</div>
-        <div class="text-sm">今天没有任务</div>
+    <div class="flex-1 flex items-center justify-center">
+      <div class="text-center animate-fade-in">
+        <div class="text-5xl mb-3">📭</div>
+        <div class="text-sm text-stone-400 mb-1">今天没有任务</div>
+        <div class="text-xs text-stone-300">点击右上角「+ 新建」添加任务</div>
       </div>
     </div>
   {/if}

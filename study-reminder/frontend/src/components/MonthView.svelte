@@ -45,32 +45,41 @@
   function isOverdue(dateStr: string): boolean {
     return dateStr < new Date().toISOString().slice(0, 10);
   }
+
+  function isWeekend(day: number): boolean {
+    const date = new Date($currentYear, $currentMonth - 1, day);
+    const dow = date.getDay();
+    return dow === 0 || dow === 6;
+  }
 </script>
 
 <div class="h-full flex flex-col p-4">
   <!-- 跨月任务横幅 -->
   {#if $crossMonthTasks && $crossMonthTasks.length > 0}
-    <div class="mb-3 space-y-1">
+    <div class="mb-3 space-y-1.5">
       {#each $crossMonthTasks as task}
-        <div class="px-3 py-1.5 bg-gradient-to-r from-orange-100 to-amber-100 rounded text-sm text-stone-700 border border-orange-200">
-          📌 {task.title}
-          <span class="text-xs text-stone-500 ml-2">
-            {task.remind_date} ~ {task.due_date}
-          </span>
+        <div class="px-4 py-2 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl text-sm text-stone-700 border border-orange-200/60 shadow-sm card-hover">
+          <div class="flex items-center gap-2">
+            <span>📌</span>
+            <span class="font-medium">{task.title}</span>
+            <span class="text-xs text-stone-400 ml-auto">
+              {task.remind_date} ~ {task.due_date}
+            </span>
+          </div>
         </div>
       {/each}
     </div>
   {/if}
 
   <!-- 星期表头 -->
-  <div class="grid grid-cols-7 mb-1">
-    {#each WEEKDAYS as wd}
-      <div class="text-center text-xs font-medium text-stone-500 py-1">{wd}</div>
+  <div class="grid grid-cols-7 mb-2">
+    {#each WEEKDAYS as wd, i}
+      <div class="text-center text-xs font-medium py-1 {i >= 5 ? 'text-stone-400' : 'text-stone-500'}">{wd}</div>
     {/each}
   </div>
 
   <!-- 日期网格 -->
-  <div class="grid grid-cols-7 flex-1 gap-px bg-stone-200 rounded overflow-hidden">
+  <div class="grid grid-cols-7 flex-1 gap-[1px] bg-stone-200 rounded-xl overflow-hidden">
     {#each Array(getDaysInMonth($currentYear, $currentMonth)) as _, i}
       {@const day = i + 1}
       {@const dateStr = formatDate($currentYear, $currentMonth, day)}
@@ -85,27 +94,34 @@
 
       <button
         onclick={() => onselect(dateStr)}
-        class="bg-white p-1 text-left hover:bg-orange-50 transition-colors min-h-[70px] flex flex-col {$currentView === 'day' && $selectedDate === dateStr ? 'ring-2 ring-orange-400' : ''}"
+        class="bg-white p-1.5 text-left hover:bg-orange-50 transition-colors min-h-[72px] flex flex-col group {$currentView === 'day' && $selectedDate === dateStr ? 'ring-2 ring-orange-400 ring-inset' : ''}"
       >
-        <span
-          class="text-xs font-medium px-1 rounded inline-block w-fit
-            {isToday(day) ? 'bg-orange-500 text-white' : 'text-stone-600'}"
-        >
-          {day}
-        </span>
-        <div class="flex-1 overflow-hidden mt-0.5 space-y-0.5">
+        <div class="flex items-center justify-between">
+          <span
+            class="text-xs font-medium px-1.5 py-0.5 rounded-md inline-block w-fit
+              {isToday(day) ? 'bg-orange-500 text-white shadow-sm' : isWeekend(day) ? 'text-stone-400' : 'text-stone-600'}"
+          >
+            {day}
+          </span>
+          {#if dayTasks.length > 0}
+            <span class="text-[10px] text-stone-400 opacity-0 group-hover:opacity-100 transition-opacity">{dayTasks.length}项</span>
+          {/if}
+        </div>
+        <div class="flex-1 overflow-hidden mt-1 space-y-0.5">
           {#each dayTasks.slice(0, 3) as task}
             <div
-              class="text-[10px] leading-tight px-1 rounded truncate {PRIORITY_COLORS[task.priority] || 'bg-stone-100 text-stone-600'}"
+              class="text-[10px] leading-tight px-1.5 py-0.5 rounded truncate {PRIORITY_COLORS[task.priority] || 'bg-stone-100 text-stone-600'}"
             >
-              {task.title}
-              {#if task.due_date === dateStr && task.repeat_type === "none"}
-                <span class="text-red-500 font-bold"> DDL</span>
-              {/if}
+              <span class="flex items-center gap-1">
+                <span class="truncate">{task.title}</span>
+                {#if task.due_date === dateStr && task.repeat_type === "none"}
+                  <span class="text-red-500 font-bold flex-shrink-0">DDL</span>
+                {/if}
+              </span>
             </div>
           {/each}
           {#if dayTasks.length > 3}
-            <div class="text-[10px] text-stone-400 px-1">+{dayTasks.length - 3} 更多</div>
+            <div class="text-[10px] text-stone-400 px-1 font-medium">+{dayTasks.length - 3} 更多</div>
           {/if}
         </div>
       </button>

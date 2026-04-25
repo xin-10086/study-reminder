@@ -1,4 +1,4 @@
-m<script lang="ts">
+<script lang="ts">
   import { onMount } from "svelte";
   import { showEditor, editingTask } from "../lib/store";
   import { getAllTasks, toggleComplete, deleteTask } from "../lib/api";
@@ -52,35 +52,47 @@ m<script lang="ts">
     if (task.due_date === new Date().toISOString().slice(0, 10)) return "今天截止";
     return "";
   }
+
+  function getRepeatLabel(repeatType: string): string {
+    switch (repeatType) {
+      case "daily": return "每天";
+      case "weekly": return "每周";
+      case "weekdays": return "工作日";
+      default: return "";
+    }
+  }
 </script>
 
-<div class="h-full flex flex-col p-4">
+<div class="h-full flex flex-col p-5">
   <!-- 排序切换 -->
-  <div class="flex items-center gap-2 mb-3">
-    <span class="text-xs text-stone-500">排序：</span>
-    <button
-      onclick={() => changeSort("priority")}
-      class="px-2 py-1 text-xs rounded {sortBy === 'priority' ? 'bg-orange-500 text-white' : 'bg-stone-100 text-stone-600'}"
-    >
-      优先级
-    </button>
-    <button
-      onclick={() => changeSort("due_date")}
-      class="px-2 py-1 text-xs rounded {sortBy === 'due_date' ? 'bg-orange-500 text-white' : 'bg-stone-100 text-stone-600'}"
-    >
-      截止日期
-    </button>
+  <div class="flex items-center gap-2 mb-4">
+    <span class="text-xs text-stone-500 font-medium">排序：</span>
+    <div class="flex gap-1 bg-stone-100 rounded-lg p-0.5">
+      <button
+        onclick={() => changeSort("priority")}
+        class="px-3 py-1 text-xs rounded-md transition-all {sortBy === 'priority' ? 'bg-white text-orange-700 shadow-sm' : 'text-stone-500 hover:text-stone-700'}"
+      >
+        优先级
+      </button>
+      <button
+        onclick={() => changeSort("due_date")}
+        class="px-3 py-1 text-xs rounded-md transition-all {sortBy === 'due_date' ? 'bg-white text-orange-700 shadow-sm' : 'text-stone-500 hover:text-stone-700'}"
+      >
+        截止日期
+      </button>
+    </div>
+    <span class="text-xs text-stone-400 ml-auto">{allTasks.length}项未完成</span>
   </div>
 
   <!-- 任务列表 -->
   <div class="flex-1 overflow-y-auto space-y-2">
     {#each allTasks as task}
       <div
-        class="flex items-center gap-2 px-3 py-2.5 rounded border {PRIORITY_COLORS[task.priority]} cursor-pointer hover:shadow-sm transition-shadow"
+        class="flex items-center gap-3 px-4 py-3 rounded-xl border {PRIORITY_COLORS[task.priority]} cursor-pointer card-hover shadow-sm"
         onclick={() => handleEdit(task)}
       >
         <button onclick={(e) => { e.stopPropagation(); handleToggle(task.id); }} class="flex-shrink-0">
-          <span class="w-5 h-5 rounded border-2 border-stone-300 flex items-center justify-center text-xs">
+          <span class="w-5 h-5 rounded-md border-2 {task.completed ? 'bg-orange-500 border-orange-500 text-white' : 'border-stone-300'} flex items-center justify-center text-xs transition-colors">
             {task.completed ? "✓" : ""}
           </span>
         </button>
@@ -88,31 +100,33 @@ m<script lang="ts">
           <div class="flex items-center gap-2">
             <span class="text-sm font-medium">{task.title}</span>
             {#if task.category}
-              <span class="text-xs text-stone-400">({task.category})</span>
+              <span class="text-xs text-stone-400 bg-stone-100 px-1.5 py-0.5 rounded">{task.category}</span>
             {/if}
           </div>
-          <div class="flex items-center gap-2 mt-0.5">
+          <div class="flex items-center gap-2 mt-1 flex-wrap">
             {#if task.due_date}
-              <span class="text-xs {isOverdue(task.due_date) ? 'text-red-600 font-bold' : 'text-stone-400'}">
-                截止: {task.due_date}
+              <span class="text-xs {isOverdue(task.due_date) ? 'text-red-600 font-medium' : 'text-stone-400'}">
+                截止 {task.due_date}
               </span>
             {/if}
             {#if task.has_time_slot && task.time_start}
-              <span class="text-xs text-stone-400">{task.time_start}{task.time_end ? `-${task.time_end}` : ''}</span>
+              <span class="text-xs text-stone-400 bg-stone-50 px-1.5 py-0.5 rounded">
+                {task.time_start}{task.time_end ? `-${task.time_end}` : ''}
+              </span>
             {/if}
             {#if task.repeat_type !== "none"}
-              <span class="text-xs text-blue-500">🔄 {task.repeat_type}</span>
+              <span class="text-xs text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded">🔄 {getRepeatLabel(task.repeat_type)}</span>
             {/if}
           </div>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-shrink-0">
           {#if getUrgency(task)}
-            <span class="text-xs px-1.5 py-0.5 rounded bg-red-100 text-red-600 font-bold">
+            <span class="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200 font-medium">
               {getUrgency(task)}
             </span>
           {/if}
-          <span class="text-xs px-1.5 py-0.5 rounded bg-white/50">{PRIORITY_LABELS[task.priority]}</span>
-          <button onclick={(e) => { e.stopPropagation(); handleDelete(task.id); }} class="text-stone-400 hover:text-red-500 text-xs">
+          <span class="text-xs px-2 py-0.5 rounded-full bg-white/70 text-stone-500 border border-stone-200">{PRIORITY_LABELS[task.priority]}</span>
+          <button onclick={(e) => { e.stopPropagation(); handleDelete(task.id); }} class="w-6 h-6 flex items-center justify-center text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-md text-xs transition-colors">
             ✕
           </button>
         </div>
@@ -120,10 +134,11 @@ m<script lang="ts">
     {/each}
 
     {#if allTasks.length === 0}
-      <div class="flex-1 flex items-center justify-center text-stone-400 pt-20">
-        <div class="text-center">
-          <div class="text-4xl mb-2">🎉</div>
-          <div class="text-sm">所有任务已完成！</div>
+      <div class="flex-1 flex items-center justify-center pt-20">
+        <div class="text-center animate-fade-in">
+          <div class="text-5xl mb-3">🎉</div>
+          <div class="text-sm text-stone-400 mb-1">所有任务已完成！</div>
+          <div class="text-xs text-stone-300">点击右上角「+ 新建」添加新任务</div>
         </div>
       </div>
     {/if}

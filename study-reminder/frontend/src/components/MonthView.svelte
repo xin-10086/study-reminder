@@ -87,7 +87,7 @@
             <span>📌</span>
             <span class="font-medium">{task.title}</span>
             <span class="text-xs text-stone-400 ml-auto">
-              {task.remind_date} ~ {task.due_date}
+              截止: {task.due_date}
             </span>
           </div>
         </div>
@@ -138,15 +138,10 @@
         <!-- 任务列表 -->
         <div class="flex-1 overflow-hidden space-y-1">
           {#each dayTasks.slice(0, 3) as task}
-            <div class="flex items-start gap-1.5 group/task">
-              <!-- 优先级小圆点 -->
-              <span class="mt-0.5 w-1.5 h-1.5 rounded-full flex-shrink-0 {task.priority === 1 ? 'bg-red-400' : task.priority === 2 ? 'bg-amber-400' : 'bg-stone-300'}"></span>
-              <!-- 标题 + DDL -->
-              <span class="flex-1 text-[10px] leading-tight truncate text-stone-600 font-medium">
-                {task.title}
-              </span>
+            <div class="px-1.5 py-1 rounded-lg text-[10px] leading-tight font-medium truncate {task.priority === 1 ? 'bg-red-100 text-red-800' : task.priority === 2 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}">
+              {task.title}
               {#if task.due_date === dateStr && task.repeat_type === "none"}
-                <span class="text-[7px] font-bold text-red-500 bg-red-50 px-1 rounded flex-shrink-0 mt-0.5">截止</span>
+                <span class="ml-0.5 text-[8px] font-bold opacity-70">截止</span>
               {/if}
             </div>
           {/each}

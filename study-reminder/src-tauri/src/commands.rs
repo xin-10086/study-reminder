@@ -83,6 +83,12 @@ pub fn get_autostart_status(app: AppHandle) -> Result<bool, String> {
     Ok(autostart.is_enabled().map_err(|e| format!("获取状态失败: {}", e))?)
 }
 
+/// 获取所有有截止日期的任务，按截止日期早晚排序
+#[tauri::command]
+pub fn get_all_due_date_tasks(db: State<Database>) -> Result<Vec<Task>, String> {
+    db.get_all_due_date_tasks()
+}
+
 /// 开始拖拽悬浮窗（使用原生窗口拖拽）
 #[tauri::command]
 pub fn start_drag_floating(app: AppHandle) -> Result<(), String> {

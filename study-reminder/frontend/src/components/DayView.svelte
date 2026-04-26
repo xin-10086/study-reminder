@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { selectedDate, showEditor, editingTask, currentView } from "../lib/store";
-  import { getTasksForDate, toggleComplete, deleteTask } from "../lib/api";
+  import { getTasksForDate, getAllDueDateTasks, toggleComplete, deleteTask } from "../lib/api";
   import { PRIORITY_COLORS, PRIORITY_LABELS } from "../lib/types";
   import type { Task } from "../lib/types";
 
@@ -9,6 +9,7 @@
   let timeSlots = $state<Task[]>([]);
   let noTimeTasks = $state<Task[]>([]);
   let allDayTasks = $state<Task[]>([]);
+  let dueDateTasks = $state<Task[]>([]);
 
   onMount(() => {
     loadDayData();
@@ -43,6 +44,9 @@
       });
       noTimeTasks = tasks.filter((t) => !t.has_time_slot).sort((a, b) => a.priority - b.priority);
       allDayTasks = tasks.filter((t) => t.due_date === date && !t.has_time_slot);
+
+      // 加载所有有截止日期的任务（按截止日期排序）
+      dueDateTasks = await getAllDueDateTasks();
     } catch (e) {
       console.error("加载日数据失败:", e);
     }
@@ -220,8 +224,51 @@
     </div>
   {/if}
 
+  <!-- 所有截止日期任务区 -->
+  {#if dueDateTasks.length > 0}
+    <div class="mt-5 pt-4 border-t border-stone-200">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-sm font-semibold text-stone-500">📅 所有截止日期任务</span>
+        <span class="text-xs text-stone-400 bg-stone-100 px-2 py-0.5 rounded-full">{dueDateTasks.length}项</span>
+      </div>
+      <div class="space-y-2">
+        {#each dueDateTasks as task}
+          <div
+            class="flex items-center gap-3 px-4 py-3 rounded-xl border {PRIORITY_COLORS[task.priority]} cursor-pointer card-hover shadow-sm"
+            onclick={() => handleEdit(task)}
+          >
+            <button onclick={(e) => { e.stopPropagation(); handleToggle(task.id); }} class="flex-shrink-0">
+              <span class="w-5 h-5 rounded-md border-2 {task.completed ? 'bg-orange-500 border-orange-500 text-white' : 'border-stone-300'} flex items-center justify-center text-xs transition-colors">
+                {task.completed ? "✓" : ""}
+              </span>
+            </button>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-medium {task.completed ? 'line-through text-stone-400' : ''}">{task.title}</span>
+                {#if task.due_date}
+                  <span class="text-xs px-1.5 py-0.5 rounded-full {isOverdue(task.due_date) ? 'bg-red-50 text-red-600 border border-red-200 font-medium' : 'bg-stone-100 text-stone-500'}">
+                    {isOverdue(task.due_date) ? "逾期!" : `截止 ${task.due_date}`}
+                  </span>
+                {/if}
+              </div>
+              {#if task.category}
+                <div class="text-xs text-stone-400 mt-0.5">{task.category}</div>
+              {/if}
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs px-2 py-0.5 rounded-full bg-white/70 text-stone-500 border border-stone-200">{PRIORITY_LABELS[task.priority]}</span>
+              <button onclick={(e) => { e.stopPropagation(); handleDelete(task.id); }} class="w-6 h-6 flex items-center justify-center text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-md text-xs transition-colors">
+                ✕
+              </button>
+            </div>
+          </div>
+        {/each}
+      </div>
+    </div>
+  {/if}
+
   <!-- 空状态 -->
-  {#if dayTasks.length === 0}
+  {#if dayTasks.length === 0 && dueDateTasks.length === 0}
     <div class="flex-1 flex items-center justify-center">
       <div class="text-center animate-fade-in">
         <div class="text-5xl mb-3">📭</div>

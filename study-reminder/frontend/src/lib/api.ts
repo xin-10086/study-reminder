@@ -60,3 +60,8 @@ export async function toggleAutostart(): Promise<boolean> {
 export async function getAutostartStatus(): Promise<boolean> {
   return invoke("get_autostart_status");
 }
+
+/** 获取所有有截止日期的未完成任务，按截止日期早晚排序 */
+export async function getAllDueDateTasks(): Promise<Task[]> {
+  return invoke("get_all_due_date_tasks");
+}

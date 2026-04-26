@@ -119,36 +119,39 @@
 
       <button
         onclick={() => onselect(dateStr)}
-        class="bg-white rounded-xl p-2 text-left hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 min-h-[80px] flex flex-col group border border-stone-100 shadow-sm
+        class="relative bg-white rounded-xl p-2.5 text-left hover:shadow-lg hover:-translate-y-1.5 transition-all duration-200 min-h-[120px] flex flex-col border border-stone-100 shadow-sm
           {$currentView === 'day' && $selectedDate === dateStr ? 'ring-2 ring-orange-400 shadow-md' : ''}
-          {isToday(day) ? 'border-orange-300 bg-orange-50/40' : ''}"
+          {isToday(day) ? 'border-orange-300' : ''}"
       >
-        <div class="flex items-center justify-between mb-1">
+        <!-- 日期标头 -->
+        <div class="flex items-center justify-between mb-1.5">
           <span
-            class="text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full
-              {isToday(day) ? 'bg-orange-500 text-white shadow-sm' : isWeekend(day) ? 'text-stone-400' : 'text-stone-600'}"
+            class="text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full
+              {isToday(day) ? 'bg-gradient-to-br from-orange-400 to-orange-600 text-white shadow-sm shadow-orange-200' : isWeekend(day) ? 'text-stone-400' : 'text-stone-700'}"
           >
             {day}
           </span>
           {#if dayTasks.length > 0}
-            <span class="text-[10px] font-medium text-stone-400 bg-stone-100 px-1.5 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">{dayTasks.length}项</span>
+            <span class="text-[10px] font-semibold text-stone-400 bg-stone-100/80 px-1.5 py-0.5 rounded-full">{dayTasks.length}</span>
           {/if}
         </div>
+        <!-- 任务列表 -->
         <div class="flex-1 overflow-hidden space-y-1">
           {#each dayTasks.slice(0, 3) as task}
-            <div
-              class="text-[10px] leading-tight px-1.5 py-0.5 rounded-md truncate font-medium shadow-sm {PRIORITY_COLORS[task.priority] || 'bg-stone-100 text-stone-600'}"
-            >
-              <span class="flex items-center gap-1">
-                <span class="truncate">{task.title}</span>
-                {#if task.due_date === dateStr && task.repeat_type === "none"}
-                  <span class="text-red-500 text-[8px] font-bold flex-shrink-0 bg-red-50 px-1 rounded">DDL</span>
-                {/if}
+            <div class="flex items-start gap-1.5 group/task">
+              <!-- 优先级小圆点 -->
+              <span class="mt-0.5 w-1.5 h-1.5 rounded-full flex-shrink-0 {task.priority === 1 ? 'bg-red-400' : task.priority === 2 ? 'bg-amber-400' : 'bg-stone-300'}"></span>
+              <!-- 标题 + DDL -->
+              <span class="flex-1 text-[10px] leading-tight truncate text-stone-600 font-medium">
+                {task.title}
               </span>
+              {#if task.due_date === dateStr && task.repeat_type === "none"}
+                <span class="text-[7px] font-bold text-red-500 bg-red-50 px-1 rounded flex-shrink-0 mt-0.5">截止</span>
+              {/if}
             </div>
           {/each}
           {#if dayTasks.length > 3}
-            <div class="text-[10px] text-stone-400 px-1 font-medium">+{dayTasks.length - 3} 更多</div>
+            <div class="text-[10px] text-stone-400 font-medium text-center py-0.5 bg-stone-50 rounded-md">+{dayTasks.length - 3}</div>
           {/if}
         </div>
       </button>

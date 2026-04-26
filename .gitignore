@@ -26,3 +26,27 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Other projects in this repo (not part of study-reminder)
+code-vs/
+practice/
+test/
+output/
+src-tauri/
+*.exe
+*.cpp
+*.c
+*.py
+*.htm
+*.html
+*.txt
+bits.c
+in.txt
+out.txt
+2025302112029_3.1.html
+AI_INSTRUCTIONS.md
+.editorconfig
+package.json
+pnpm-lock.yaml
+pnpm-lock.yaml
+.github/

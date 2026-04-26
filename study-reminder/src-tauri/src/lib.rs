@@ -98,11 +98,11 @@ fn setup_floating_window<R: Runtime>(app: &AppHandle<R>) -> Result<(), Box<dyn s
         (1920.0, 1080.0)
     };
 
-    // 创建悬浮窗
+    // 创建悬浮窗 - 使用独立的 floating.html，不依赖 Svelte 应用
     let float_window = WebviewWindowBuilder::new(
         app,
         "floating",
-        tauri::WebviewUrl::App("index.html?floating=true".into()),
+        tauri::WebviewUrl::App("floating.html".into()),
     )
     .title("")
     .inner_size(50.0, 50.0)
@@ -116,23 +116,78 @@ fn setup_floating_window<R: Runtime>(app: &AppHandle<R>) -> Result<(), Box<dyn s
 
     log::info!("悬浮窗已创建: floating");
 
-    // 注入悬浮窗 UI（可拖拽图标）
+    // 注入悬浮窗 UI（使用封面图片作为图标）
     let fw = float_window.clone();
     std::thread::spawn(move || {
         std::thread::sleep(std::time::Duration::from_millis(3000));
         
-        let js = r#"
-            document.open();
-            document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><style>*{margin:0;padding:0;box-sizing:border-box}body{width:50px;height:50px;overflow:hidden;background:transparent;font-family:"Segoe UI",sans-serif}#float-icon{width:44px;height:44px;background:linear-gradient(135deg,#f97316,#ea580c);border-radius:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(0,0,0,0.25);position:absolute;top:3px;left:3px;cursor:grab;font-size:20px;user-select:none}#float-icon:active{cursor:grabbing}#float-icon img{width:24px;height:24px;border-radius:4px}</style></head><body><div id="float-icon"><img src="/app-icon.png" alt="icon" onerror="this.outerHTML=\'📋\'"></div><script>(function(){var i=document.getElementById("float-icon"),dragStarted=!1;i.addEventListener("mousedown",function(e){e.preventDefault();dragStarted=!1;var startX=e.clientX,startY=e.clientY;function onMove(e){Math.abs(e.clientX-startX)>3||Math.abs(e.clientY-startY)>3?(dragStarted=!0,document.removeEventListener("mousemove",onMove),document.removeEventListener("mouseup",onUp),window.__TAURI_INTERNALS__&&window.__TAURI_INTERNALS__.invoke&&window.__TAURI_INTERNALS__.invoke("start_drag_floating")):void 0}function onUp(e){document.removeEventListener("mousemove",onMove),document.removeEventListener("mouseup",onUp),dragStarted||(window.__TAURI_INTERNALS__&&window.__TAURI_INTERNALS__.invoke&&window.__TAURI_INTERNALS__.invoke("toggle_main_window"))}document.addEventListener("mousemove",onMove),document.addEventListener("mouseup",onUp)});})();<\/script></body></html>');
-            document.close();
-            console.log("悬浮窗图标已设置（可拖拽）");
-        "#;
+        // 使用 include_bytes! 在编译时嵌入封面图片
+        let icon_bg = {
+            let bytes = include_bytes!("../../frontend/public/floating-icon.jpg");
+            let b64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, bytes);
+            log::info!("封面图片已加载（编译时嵌入），大小: {} bytes, base64: {} chars", bytes.len(), b64.len());
+            format!("data:image/jpeg;base64,{}", b64)
+        };
         
-        match fw.eval(js) {
-            Ok(_) => log::info!("悬浮窗图标注入成功（可拖拽）"),
+        // 使用原始字符串构建 HTML，避免转义问题
+        let html = format!(
+            r#"<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+            *{{margin:0;padding:0;box-sizing:border-box}}
+            body{{width:50px;height:50px;overflow:hidden;background:transparent}}
+            #float-icon{{width:44px;height:44px;background-image:url('{icon_bg}');background-size:cover;background-position:center;border-radius:14px;box-shadow:0 3px 10px rgba(0,0,0,0.25);position:absolute;top:3px;left:3px;cursor:grab;user-select:none}}
+            #float-icon:active{{cursor:grabbing}}
+            </style></head><body>
+            <div id="float-icon"></div>
+            <script>
+            (function(){{
+                var i=document.getElementById("float-icon"),dragStarted=!1;
+                i.addEventListener("mousedown",function(e){{
+                    e.preventDefault();dragStarted=!1;
+                    var startX=e.clientX,startY=e.clientY;
+                    function onMove(e){{
+                        Math.abs(e.clientX-startX)>3||Math.abs(e.clientY-startY)>3?
+                            (dragStarted=!0,document.removeEventListener("mousemove",onMove),
+                            document.removeEventListener("mouseup",onUp),
+                            window.__TAURI_INTERNALS__&&window.__TAURI_INTERNALS__.invoke&&
+                            window.__TAURI_INTERNALS__.invoke("start_drag_floating")):void 0
+                    }}
+                    function onUp(e){{
+                        document.removeEventListener("mousemove",onMove),
+                        document.removeEventListener("mouseup",onUp),
+                        dragStarted||
+                            (window.__TAURI_INTERNALS__&&window.__TAURI_INTERNALS__.invoke&&
+                            window.__TAURI_INTERNALS__.invoke("toggle_main_window"))
+                    }}
+                    document.addEventListener("mousemove",onMove),
+                    document.addEventListener("mouseup",onUp)
+                }});
+            }})();
+            </script></body></html>"#
+        );
+        
+        // 压缩 HTML：移除换行和多余空格
+        let html_compressed = html
+            .lines()
+            .map(|l| l.trim())
+            .collect::<Vec<_>>()
+            .join("");
+        
+        let js = format!(
+            r#"document.open();
+            document.write('{}');
+            document.close();
+            console.log("悬浮窗图标已设置（封面图片）");"#,
+            html_compressed.replace("'", "\\'")
+        );
+        
+        match fw.eval(&js) {
+            Ok(_) => log::info!("悬浮窗图标注入成功（封面图片）"),
             Err(e) => log::error!("悬浮窗图标注入失败: {:?}", e),
         }
     });
+
+
+
 
     Ok(())
 }

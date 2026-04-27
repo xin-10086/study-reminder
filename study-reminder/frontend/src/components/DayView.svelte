@@ -13,7 +13,6 @@
   let completedTasks = $state<Task[]>([]);
   let showCompleted = $state(false);
   let completedCount = $state(0);
-  let starAnimations = $state<Set<number>>(new Set());
 
   onMount(() => {
     loadDayData();
@@ -61,18 +60,10 @@
     }
   }
 
-  async function handleToggle(id: number) {
-    // 触发星星动画
-    starAnimations.add(id);
-    starAnimations = new Set(starAnimations);
-
+  async function handleToggle(id: number, title: string) {
+    if (!confirm(`确定将「${title}」标记为已完成？`)) return;
     await toggleComplete(id);
-    // 延迟重新加载，让动画有时间播放
-    setTimeout(() => {
-      starAnimations.delete(id);
-      starAnimations = new Set(starAnimations);
-      loadDayData();
-    }, 600);
+    loadDayData();
   }
 
   async function handleDelete(id: number) {
@@ -133,13 +124,7 @@
             class="flex items-center gap-3 px-4 py-3 rounded-xl border {PRIORITY_COLORS[task.priority]} cursor-pointer card-hover shadow-sm relative overflow-hidden"
             onclick={() => handleEdit(task)}
           >
-            <!-- 星星动画 -->
-            {#if starAnimations.has(task.id)}
-              <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                <span class="text-2xl animate-star-burst">✨</span>
-              </div>
-            {/if}
-            <button onclick={(e) => { e.stopPropagation(); handleToggle(task.id); }} class="flex-shrink-0">
+            <button onclick={(e) => { e.stopPropagation(); handleToggle(task.id, task.title); }} class="flex-shrink-0">
               <span class="w-5 h-5 rounded-md border-2 {task.completed ? 'bg-orange-500 border-orange-500 text-white' : 'border-stone-300'} flex items-center justify-center text-xs transition-colors">
                 {task.completed ? "✓" : ""}
               </span>
@@ -179,12 +164,6 @@
             class="flex items-stretch gap-3 cursor-pointer group relative overflow-hidden"
             onclick={() => handleEdit(task)}
           >
-            <!-- 星星动画 -->
-            {#if starAnimations.has(task.id)}
-              <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                <span class="text-2xl animate-star-burst">✨</span>
-              </div>
-            {/if}
             <div class="w-14 flex-shrink-0 flex flex-col items-end justify-center">
               <span class="text-xs font-mono font-semibold text-stone-500">{task.time_start || ""}</span>
               {#if task.time_end}
@@ -229,13 +208,7 @@
             class="flex items-center gap-3 px-4 py-3 rounded-xl border {PRIORITY_COLORS[task.priority]} cursor-pointer card-hover shadow-sm relative overflow-hidden"
             onclick={() => handleEdit(task)}
           >
-            <!-- 星星动画 -->
-            {#if starAnimations.has(task.id)}
-              <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                <span class="text-2xl animate-star-burst">✨</span>
-              </div>
-            {/if}
-            <button onclick={(e) => { e.stopPropagation(); handleToggle(task.id); }} class="flex-shrink-0">
+            <button onclick={(e) => { e.stopPropagation(); handleToggle(task.id, task.title); }} class="flex-shrink-0">
               <span class="w-5 h-5 rounded-md border-2 {task.completed ? 'bg-orange-500 border-orange-500 text-white' : 'border-stone-300'} flex items-center justify-center text-xs transition-colors">
                 {task.completed ? "✓" : ""}
               </span>
@@ -302,13 +275,7 @@
             class="flex items-center gap-3 px-4 py-3 rounded-xl border {PRIORITY_COLORS[task.priority]} cursor-pointer card-hover shadow-sm relative overflow-hidden"
             onclick={() => handleEdit(task)}
           >
-            <!-- 星星动画 -->
-            {#if starAnimations.has(task.id)}
-              <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                <span class="text-2xl animate-star-burst">✨</span>
-              </div>
-            {/if}
-            <button onclick={(e) => { e.stopPropagation(); handleToggle(task.id); }} class="flex-shrink-0">
+            <button onclick={(e) => { e.stopPropagation(); handleToggle(task.id, task.title); }} class="flex-shrink-0">
               <span class="w-5 h-5 rounded-md border-2 {task.completed ? 'bg-orange-500 border-orange-500 text-white' : 'border-stone-300'} flex items-center justify-center text-xs transition-colors">
                 {task.completed ? "✓" : ""}
               </span>
@@ -349,14 +316,3 @@
     </div>
   {/if}
 </div>
-
-<style>
-  @keyframes star-burst {
-    0% { transform: scale(0.5); opacity: 1; }
-    50% { transform: scale(1.5); opacity: 0.8; }
-    100% { transform: scale(2); opacity: 0; }
-  }
-  :global(.animate-star-burst) {
-    animation: star-burst 0.6s ease-out forwards;
-  }
-</style>

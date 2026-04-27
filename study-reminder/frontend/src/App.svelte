@@ -95,7 +95,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `study-reminder-backup-${today}.json`;
+      a.download = `kill-the-ddl-backup-${today}.json`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {

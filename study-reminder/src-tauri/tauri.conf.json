@@ -1,8 +1,8 @@
 {
   "$schema": "https://raw.githubusercontent.com/nicedoc/tauri/refs/heads/dev/crates/tauri-config-schema/schema.json",
-  "productName": "StudyReminder",
+  "productName": "Kill the DDL",
   "version": "0.1.0",
-  "identifier": "com.studyreminder.app",
+  "identifier": "com.killtheddl.app",
   "build": {
     "frontendDist": "../frontend/dist",
     "devUrl": "http://localhost:5173",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "StudyReminder",
+        "title": "Kill the DDL",
         "width": 900,
         "height": 600,
         "resizable": true,

@@ -205,7 +205,7 @@ fn setup_tray<R: Runtime>(app: &AppHandle<R>) -> Result<(), Box<dyn std::error::
     TrayIconBuilder::new()
         .icon(app.default_window_icon().unwrap().clone())
         .menu(&menu)
-        .tooltip("StudyReminder - 学习待办提醒")
+        .tooltip("Kill the DDL - 学习待办提醒")
         .on_menu_event(|app, event| {
             match event.id().as_ref() {
                 "show" => {

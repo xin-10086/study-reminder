@@ -95,6 +95,18 @@ pub fn get_completed_tasks_for_date(db: State<Database>, date: String) -> Result
     db.get_completed_tasks_for_date(&date)
 }
 
+/// 清空所有数据
+#[tauri::command]
+pub fn clear_all_tasks(db: State<Database>) -> Result<bool, String> {
+    db.clear_all_tasks()
+}
+
+/// 清空所有已完成任务
+#[tauri::command]
+pub fn clear_completed_tasks(db: State<Database>) -> Result<bool, String> {
+    db.clear_completed_tasks()
+}
+
 /// 开始拖拽悬浮窗（使用原生窗口拖拽）
 #[tauri::command]
 pub fn start_drag_floating(app: AppHandle) -> Result<(), String> {

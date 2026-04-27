@@ -11,7 +11,7 @@
     crossMonthTasks,
   } from "./lib/store";
   import type { ViewType, Task } from "./lib/types";
-  import { getTasksForMonth, getCrossMonthTasks, getTasksForDate, exportTasks, getAutostartStatus, toggleAutostart } from "./lib/api";
+  import { getTasksForMonth, getCrossMonthTasks, getTasksForDate, exportTasks, getAutostartStatus, toggleAutostart, clearAllTasks, clearCompletedTasks } from "./lib/api";
   import MonthView from "./components/MonthView.svelte";
   import DayView from "./components/DayView.svelte";
   import AllTasksView from "./components/AllTasksView.svelte";
@@ -295,7 +295,7 @@
               class="relative w-10 h-5 rounded-full transition-colors {autostartEnabled ? 'bg-orange-500' : 'bg-stone-300'} group-hover:shadow-sm"
             >
               <span
-                class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-all {autostartEnabled ? 'translate-x-5' : 'translate-x-0.5'}"
+                class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-all {autostartEnabled ? 'left-[22px]' : 'left-[2px]'}"
               ></span>
             </button>
             <span class="text-sm text-stone-600">开机自启</span>
@@ -310,7 +310,38 @@
           </div>
 
           <!-- 版本信息 -->
-          <span class="text-xs text-stone-400 ml-auto">v0.1.0</span>
+          <span class="text-xs text-stone-400">v0.1.0</span>
+
+          <!-- 分隔线 -->
+          <div class="w-px h-5 bg-stone-200"></div>
+
+          <!-- 清空已完成任务 -->
+          <button
+            onclick={async () => {
+              if (confirm("确定要清空所有已完成的任务吗？此操作不可撤销！")) {
+                await clearCompletedTasks();
+                alert("已完成任务已清空");
+              }
+            }}
+            class="px-3 py-1.5 text-xs rounded-lg bg-stone-100 text-stone-600 hover:bg-yellow-100 hover:text-yellow-700 transition-colors btn-press"
+          >
+            🗑️ 清空已完成
+          </button>
+
+          <!-- 清空所有数据 -->
+          <button
+            onclick={async () => {
+              if (confirm("⚠️ 确定要清空所有数据吗？\n\n此操作将删除所有任务（包括未完成和已完成），不可撤销！")) {
+                if (confirm("再次确认：真的要删除所有数据吗？")) {
+                  await clearAllTasks();
+                  alert("所有数据已清空");
+                }
+              }
+            }}
+            class="px-3 py-1.5 text-xs rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors btn-press"
+          >
+            🚨 清空所有
+          </button>
         </div>
       </div>
     {/if}

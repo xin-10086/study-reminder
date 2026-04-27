@@ -482,6 +482,22 @@ impl Database {
         Ok(result)
     }
 
+    /// 清空所有数据
+    pub fn clear_all_tasks(&self) -> Result<bool, String> {
+        let conn = self.conn.lock().map_err(|e| format!("锁失败: {}", e))?;
+        conn.execute("DELETE FROM tasks", [])
+            .map_err(|e| format!("清空数据失败: {}", e))?;
+        Ok(true)
+    }
+
+    /// 清空所有已完成任务
+    pub fn clear_completed_tasks(&self) -> Result<bool, String> {
+        let conn = self.conn.lock().map_err(|e| format!("锁失败: {}", e))?;
+        conn.execute("DELETE FROM tasks WHERE completed = 1", [])
+            .map_err(|e| format!("清空已完成任务失败: {}", e))?;
+        Ok(true)
+    }
+
     /// 获取所有有截止日期的未完成任务，按截止日期早晚排序
     pub fn get_all_due_date_tasks(&self) -> Result<Vec<Task>, String> {
         let conn = self.conn.lock().map_err(|e| format!("锁失败: {}", e))?;

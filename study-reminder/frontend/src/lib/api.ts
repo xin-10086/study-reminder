@@ -70,3 +70,13 @@ export async function getAllDueDateTasks(): Promise<Task[]> {
 export async function getCompletedTasksForDate(date: string): Promise<Task[]> {
   return invoke("get_completed_tasks_for_date", { date });
 }
+
+/** 清空所有数据 */
+export async function clearAllTasks(): Promise<boolean> {
+  return invoke("clear_all_tasks");
+}
+
+/** 清空所有已完成任务 */
+export async function clearCompletedTasks(): Promise<boolean> {
+  return invoke("clear_completed_tasks");
+}

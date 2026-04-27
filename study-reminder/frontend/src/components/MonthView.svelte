@@ -87,7 +87,7 @@
             <span>📌</span>
             <span class="font-medium">{task.title}</span>
             <span class="text-xs text-stone-400 ml-auto">
-              截止: {task.due_date}
+              DDL: {task.due_date}
             </span>
           </div>
         </div>
@@ -141,7 +141,7 @@
             <div class="px-1.5 py-1 rounded-lg text-[10px] leading-tight font-medium truncate {task.priority === 1 ? 'bg-red-100 text-red-800' : task.priority === 2 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}">
               {task.title}
               {#if task.due_date === dateStr && task.repeat_type === "none"}
-                <span class="ml-0.5 text-[8px] font-bold opacity-70">截止</span>
+                <span class="ml-0.5 text-[8px] font-bold opacity-70">DDL</span>
               {/if}
             </div>
           {/each}

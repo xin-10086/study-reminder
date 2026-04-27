@@ -241,7 +241,7 @@ impl Database {
 
         let order_clause = match sort_by {
             "priority" => "ORDER BY priority ASC, due_date ASC",
-            "due_date" => "ORDER BY due_date ASC, priority ASC",
+            "due_date" => "ORDER BY CASE WHEN due_date IS NULL OR due_date = '' THEN 1 ELSE 0 END, due_date ASC, priority ASC",
             _ => "ORDER BY priority ASC, due_date ASC",
         };
 

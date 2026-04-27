@@ -445,6 +445,43 @@ impl Database {
         ).map_err(|e| format!("查询任务失败: {}", e))
     }
 
+    /// 获取指定日期已完成的任务
+    pub fn get_completed_tasks_for_date(&self, date: &str) -> Result<Vec<Task>, String> {
+        let conn = self.conn.lock().map_err(|e| format!("锁失败: {}", e))?;
+        let mut stmt = conn.prepare(
+            "SELECT * FROM tasks WHERE completed = 1 AND (due_date = ?1 OR remind_date = ?1) ORDER BY updated_at DESC"
+        ).map_err(|e| format!("查询准备失败: {}", e))?;
+
+        let tasks = stmt.query_map(params![date], |row| {
+            Ok(Task {
+                id: row.get(0)?,
+                title: row.get(1)?,
+                priority: row.get(2)?,
+                category: row.get(3)?,
+                due_date: row.get(4)?,
+                remind_date: row.get(5)?,
+                has_time_slot: row.get::<_, i32>(6)? != 0,
+                time_start: row.get(7)?,
+                time_end: row.get(8)?,
+                repeat_type: row.get(9)?,
+                repeat_days: row.get(10)?,
+                repeat_end: row.get(11)?,
+                completed: row.get::<_, i32>(12)? != 0,
+                note: row.get(13)?,
+                created_at: row.get(14)?,
+                updated_at: row.get(15)?,
+                sync_version: row.get(16)?,
+                last_synced_at: row.get(17)?,
+            })
+        }).map_err(|e| format!("查询执行失败: {}", e))?;
+
+        let mut result = Vec::new();
+        for task in tasks {
+            result.push(task.map_err(|e| format!("行读取失败: {}", e))?);
+        }
+        Ok(result)
+    }
+
     /// 获取所有有截止日期的未完成任务，按截止日期早晚排序
     pub fn get_all_due_date_tasks(&self) -> Result<Vec<Task>, String> {
         let conn = self.conn.lock().map_err(|e| format!("锁失败: {}", e))?;

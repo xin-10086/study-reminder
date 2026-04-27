@@ -89,6 +89,12 @@ pub fn get_all_due_date_tasks(db: State<Database>) -> Result<Vec<Task>, String> 
     db.get_all_due_date_tasks()
 }
 
+/// 获取指定日期已完成的任务
+#[tauri::command]
+pub fn get_completed_tasks_for_date(db: State<Database>, date: String) -> Result<Vec<Task>, String> {
+    db.get_completed_tasks_for_date(&date)
+}
+
 /// 开始拖拽悬浮窗（使用原生窗口拖拽）
 #[tauri::command]
 pub fn start_drag_floating(app: AppHandle) -> Result<(), String> {

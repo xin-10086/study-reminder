@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { selectedDate, showEditor, editingTask, currentView } from "../lib/store";
-  import { getTasksForDate, getAllDueDateTasks, toggleComplete, deleteTask } from "../lib/api";
+  import { getTasksForDate, getAllDueDateTasks, toggleComplete, deleteTask, getCompletedTasksForDate } from "../lib/api";
   import { PRIORITY_COLORS, PRIORITY_LABELS } from "../lib/types";
   import type { Task } from "../lib/types";
 
@@ -10,6 +10,10 @@
   let noTimeTasks = $state<Task[]>([]);
   let allDayTasks = $state<Task[]>([]);
   let dueDateTasks = $state<Task[]>([]);
+  let completedTasks = $state<Task[]>([]);
+  let showCompleted = $state(false);
+  let completedCount = $state(0);
+  let starAnimations = $state<Set<number>>(new Set());
 
   onMount(() => {
     loadDayData();
@@ -47,14 +51,28 @@
 
       // 加载所有有截止日期的任务（按截止日期排序）
       dueDateTasks = await getAllDueDateTasks();
+
+      // 加载已完成任务
+      const completed = await getCompletedTasksForDate(date);
+      completedTasks = completed;
+      completedCount = completed.length;
     } catch (e) {
       console.error("加载日数据失败:", e);
     }
   }
 
   async function handleToggle(id: number) {
+    // 触发星星动画
+    starAnimations.add(id);
+    starAnimations = new Set(starAnimations);
+
     await toggleComplete(id);
-    loadDayData();
+    // 延迟重新加载，让动画有时间播放
+    setTimeout(() => {
+      starAnimations.delete(id);
+      starAnimations = new Set(starAnimations);
+      loadDayData();
+    }, 600);
   }
 
   async function handleDelete(id: number) {
@@ -112,9 +130,15 @@
       <div class="space-y-2">
         {#each allDayTasks as task}
           <div
-            class="flex items-center gap-3 px-4 py-3 rounded-xl border {PRIORITY_COLORS[task.priority]} cursor-pointer card-hover shadow-sm"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl border {PRIORITY_COLORS[task.priority]} cursor-pointer card-hover shadow-sm relative overflow-hidden"
             onclick={() => handleEdit(task)}
           >
+            <!-- 星星动画 -->
+            {#if starAnimations.has(task.id)}
+              <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                <span class="text-2xl animate-star-burst">✨</span>
+              </div>
+            {/if}
             <button onclick={(e) => { e.stopPropagation(); handleToggle(task.id); }} class="flex-shrink-0">
               <span class="w-5 h-5 rounded-md border-2 {task.completed ? 'bg-orange-500 border-orange-500 text-white' : 'border-stone-300'} flex items-center justify-center text-xs transition-colors">
                 {task.completed ? "✓" : ""}
@@ -152,9 +176,15 @@
       <div class="space-y-2 relative">
         {#each timeSlots as task}
           <div
-            class="flex items-stretch gap-3 cursor-pointer group"
+            class="flex items-stretch gap-3 cursor-pointer group relative overflow-hidden"
             onclick={() => handleEdit(task)}
           >
+            <!-- 星星动画 -->
+            {#if starAnimations.has(task.id)}
+              <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                <span class="text-2xl animate-star-burst">✨</span>
+              </div>
+            {/if}
             <div class="w-14 flex-shrink-0 flex flex-col items-end justify-center">
               <span class="text-xs font-mono font-semibold text-stone-500">{task.time_start || ""}</span>
               {#if task.time_end}
@@ -188,7 +218,7 @@
 
   <!-- 未安排时间区 -->
   {#if noTimeTasks.length > 0}
-    <div>
+    <div class="mb-5">
       <div class="flex items-center gap-2 mb-3">
         <span class="text-sm font-semibold text-stone-500">📝 未安排时间</span>
         <span class="text-xs text-stone-400 bg-stone-100 px-2 py-0.5 rounded-full">{noTimeTasks.length}项</span>
@@ -196,9 +226,15 @@
       <div class="space-y-2">
         {#each noTimeTasks as task}
           <div
-            class="flex items-center gap-3 px-4 py-3 rounded-xl border {PRIORITY_COLORS[task.priority]} cursor-pointer card-hover shadow-sm"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl border {PRIORITY_COLORS[task.priority]} cursor-pointer card-hover shadow-sm relative overflow-hidden"
             onclick={() => handleEdit(task)}
           >
+            <!-- 星星动画 -->
+            {#if starAnimations.has(task.id)}
+              <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                <span class="text-2xl animate-star-burst">✨</span>
+              </div>
+            {/if}
             <button onclick={(e) => { e.stopPropagation(); handleToggle(task.id); }} class="flex-shrink-0">
               <span class="w-5 h-5 rounded-md border-2 {task.completed ? 'bg-orange-500 border-orange-500 text-white' : 'border-stone-300'} flex items-center justify-center text-xs transition-colors">
                 {task.completed ? "✓" : ""}
@@ -224,6 +260,35 @@
     </div>
   {/if}
 
+  <!-- 已完成任务区 -->
+  {#if completedTasks.length > 0}
+    <div class="mt-2 pt-3 border-t border-stone-200">
+      <button
+        onclick={() => showCompleted = !showCompleted}
+        class="flex items-center gap-2 w-full text-left mb-2 group"
+      >
+        <span class="text-sm font-semibold text-stone-500">✅ 已完成</span>
+        <span class="text-xs text-stone-400 bg-stone-100 px-2 py-0.5 rounded-full">{completedCount}项</span>
+        <span class="text-xs text-stone-400 ml-auto transition-transform {showCompleted ? 'rotate-180' : ''}">▼</span>
+      </button>
+      {#if showCompleted}
+        <div class="space-y-2 animate-fade-in">
+          {#each completedTasks as task}
+            <div
+              class="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50"
+            >
+              <span class="w-5 h-5 rounded-md bg-orange-500 border-orange-500 text-white flex items-center justify-center text-xs flex-shrink-0">✓</span>
+              <div class="flex-1 min-w-0">
+                <span class="text-sm text-stone-400 line-through">{task.title}</span>
+              </div>
+              <span class="text-[10px] text-stone-400">{task.updated_at ? task.updated_at.slice(11, 16) : ''}</span>
+            </div>
+          {/each}
+        </div>
+      {/if}
+    </div>
+  {/if}
+
   <!-- 所有截止日期任务区 -->
   {#if dueDateTasks.length > 0}
     <div class="mt-5 pt-4 border-t border-stone-200">
@@ -234,9 +299,15 @@
       <div class="space-y-2">
         {#each dueDateTasks as task}
           <div
-            class="flex items-center gap-3 px-4 py-3 rounded-xl border {PRIORITY_COLORS[task.priority]} cursor-pointer card-hover shadow-sm"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl border {PRIORITY_COLORS[task.priority]} cursor-pointer card-hover shadow-sm relative overflow-hidden"
             onclick={() => handleEdit(task)}
           >
+            <!-- 星星动画 -->
+            {#if starAnimations.has(task.id)}
+              <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                <span class="text-2xl animate-star-burst">✨</span>
+              </div>
+            {/if}
             <button onclick={(e) => { e.stopPropagation(); handleToggle(task.id); }} class="flex-shrink-0">
               <span class="w-5 h-5 rounded-md border-2 {task.completed ? 'bg-orange-500 border-orange-500 text-white' : 'border-stone-300'} flex items-center justify-center text-xs transition-colors">
                 {task.completed ? "✓" : ""}
@@ -268,7 +339,7 @@
   {/if}
 
   <!-- 空状态 -->
-  {#if dayTasks.length === 0 && dueDateTasks.length === 0}
+  {#if dayTasks.length === 0 && dueDateTasks.length === 0 && completedTasks.length === 0}
     <div class="flex-1 flex items-center justify-center">
       <div class="text-center animate-fade-in">
         <div class="text-5xl mb-3">📭</div>
@@ -278,3 +349,14 @@
     </div>
   {/if}
 </div>
+
+<style>
+  @keyframes star-burst {
+    0% { transform: scale(0.5); opacity: 1; }
+    50% { transform: scale(1.5); opacity: 0.8; }
+    100% { transform: scale(2); opacity: 0; }
+  }
+  :global(.animate-star-burst) {
+    animation: star-burst 0.6s ease-out forwards;
+  }
+</style>

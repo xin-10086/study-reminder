@@ -65,3 +65,8 @@ export async function getAutostartStatus(): Promise<boolean> {
 export async function getAllDueDateTasks(): Promise<Task[]> {
   return invoke("get_all_due_date_tasks");
 }
+
+/** 获取指定日期已完成的任务 */
+export async function getCompletedTasksForDate(date: string): Promise<Task[]> {
+  return invoke("get_completed_tasks_for_date", { date });
+}

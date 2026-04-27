@@ -76,6 +76,7 @@ pub fn run() {
             commands::toggle_autostart,
             commands::get_autostart_status,
             commands::get_all_due_date_tasks,
+            commands::get_completed_tasks_for_date,
             commands::start_drag_floating,
         ])
         .run(tauri::generate_context!())
